@@ -1,0 +1,2565 @@
+
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Admin Dashboard — Taiping Explorer 2026</title>
+<meta name="description" content="Papan pemuka pentadbir masa nyata bersepadu Firebase untuk aplikasi Taiping Local Explorer 2026.">
+<meta name="theme-color" content="#0284c7">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --sky-primary:#0284c7;
+    --sky-deep:#0369a1;
+    --sky-light:#e0f2fe;
+    --sky-soft:#f0f9ff;
+    --mint-accent:#10b981;
+    --mint-soft:#ecfdf5;
+    --sand-gold:#f59e0b;
+    --rose:#ef4444;
+    --bg-canvas:#f4f8fc;
+    --surface-card:#ffffff;
+    --surface-soft:#f8fafc;
+    --sidebar-bg:#ffffff;
+    --text-main:#0f172a;
+    --text-muted:#64748b;
+    --text-subtle:#94a3b8;
+    --border-subtle:#e2e8f0;
+    --shadow-ambient:0 4px 20px -2px rgba(2,132,199,.06), 0 2px 6px -1px rgba(15,23,42,.04);
+    --shadow-float:0 16px 36px -4px rgba(2,132,199,.12), 0 4px 12px rgba(15,23,42,.04);
+    --shadow-deep:0 24px 60px rgba(15,23,42,.14);
+    --radius-sm:12px;
+    --radius-md:18px;
+    --radius-lg:24px;
+    --radius-xl:30px;
+    --spring:all .32s cubic-bezier(.16,1,.3,1);
+    --sidebar-w:264px;
+
+    /* ===== SAFE AREA INSETS (notch / home indicator) ===== */
+    --safe-top:env(safe-area-inset-top, 0px);
+    --safe-bottom:env(safe-area-inset-bottom, 0px);
+    --safe-left:env(safe-area-inset-left, 0px);
+    --safe-right:env(safe-area-inset-right, 0px);
+  }
+
+  [data-theme="dark"]{
+    --bg-canvas:#080d15;
+    --surface-card:#111a28;
+    --surface-soft:#0d1521;
+    --sidebar-bg:#0d1521;
+    --text-main:#f1f5f9;
+    --text-muted:#94a3b8;
+    --text-subtle:#64748b;
+    --border-subtle:#1e293b;
+    --sky-soft:#0c1929;
+    --mint-soft:#082318;
+    --shadow-ambient:0 6px 20px rgba(0,0,0,.45);
+    --shadow-float:0 16px 36px rgba(0,0,0,.6);
+    --shadow-deep:0 24px 60px rgba(0,0,0,.75);
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  html{
+    height:100%;
+    -webkit-text-size-adjust:100%;
+    scroll-padding-top:calc(80px + var(--safe-top));
+  }
+  body{
+    font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,sans-serif;
+    background:var(--bg-canvas);
+    color:var(--text-main);
+    line-height:1.5;
+    transition:background-color .4s ease,color .4s ease;
+    overflow-x:hidden;
+    min-height:100vh;
+    min-height:100dvh;
+    overscroll-behavior-y:none; /* halang pull-to-refresh & bounce berlebihan */
+  }
+  /* Kunci scroll badan (iOS-safe) */
+  body.no-scroll{
+    position:fixed;
+    left:0;right:0;
+    width:100%;
+    overflow:hidden;
+  }
+
+  .font-editorial{font-family:'Outfit',sans-serif;}
+  ::-webkit-scrollbar{width:10px;height:10px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:var(--border-subtle);border-radius:20px;border:3px solid transparent;background-clip:content-box;}
+  ::-webkit-scrollbar-thumb:hover{background:var(--text-subtle);background-clip:content-box;}
+
+  /* ================= LAYOUT ================= */
+  .admin-shell{
+    display:flex;
+    min-height:100vh;
+    min-height:100dvh;
+  }
+
+  /* ---------- SIDEBAR ---------- */
+  .sidebar{
+    width:var(--sidebar-w);
+    flex:0 0 var(--sidebar-w);
+    background:var(--sidebar-bg);
+    border-right:1px solid var(--border-subtle);
+    display:flex;
+    flex-direction:column;
+    position:sticky;
+    top:0;
+    height:100vh;
+    height:100dvh;
+    padding-top:var(--safe-top);              /* lindungi dari notch */
+    padding-left:var(--safe-left);
+    z-index:900;
+    transition:var(--spring);
+  }
+  .brand{
+    display:flex;align-items:center;gap:12px;
+    padding:22px 20px;
+    border-bottom:1px solid var(--border-subtle);
+    flex:0 0 auto;
+  }
+  .brand-mark{
+    width:42px;height:42px;border-radius:14px;
+    background:linear-gradient(135deg,var(--sky-primary),#38bdf8);
+    color:#fff;display:flex;align-items:center;justify-content:center;
+    font-size:1.15rem;box-shadow:0 6px 16px rgba(2,132,199,.32);
+    flex:0 0 42px;
+  }
+  .brand-txt h1{font-family:'Outfit',sans-serif;font-size:1.02rem;font-weight:800;letter-spacing:-.01em;line-height:1.1;}
+  .brand-txt span{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--sky-primary);}
+
+  .nav-scroll{
+    flex:1 1 auto;
+    min-height:0;                              /* penting untuk flex scroll */
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;          /* momentum scroll iOS */
+    overscroll-behavior:contain;               /* elak scroll chaining */
+    padding:16px 12px;
+  }
+  .nav-label{
+    font-size:.66rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--text-subtle);padding:14px 12px 8px;
+  }
+  .nav-item{
+    display:flex;align-items:center;gap:12px;
+    padding:11px 14px;border-radius:14px;
+    font-size:.88rem;font-weight:700;color:var(--text-muted);
+    cursor:pointer;border:none;background:transparent;width:100%;
+    text-align:left;transition:var(--spring);position:relative;
+  }
+  .nav-item i{width:20px;text-align:center;font-size:.98rem;transition:var(--spring);}
+  .nav-item:hover{background:var(--sky-soft);color:var(--sky-primary);}
+  .nav-item.active{
+    background:linear-gradient(135deg,rgba(2,132,199,.12),rgba(16,185,129,.09));
+    color:var(--sky-primary);
+  }
+  .nav-item.active::before{
+    content:'';position:absolute;left:0;top:22%;height:56%;width:4px;
+    border-radius:0 6px 6px 0;background:var(--sky-primary);
+  }
+  .nav-item .nav-count{
+    margin-left:auto;font-size:.68rem;font-weight:800;
+    background:var(--sky-light);color:var(--sky-deep);
+    padding:2px 8px;border-radius:20px;
+  }
+  [data-theme="dark"] .nav-item .nav-count{background:rgba(2,132,199,.2);color:#7dd3fc;}
+
+  .sidebar-foot{
+    padding:14px;
+    padding-bottom:calc(14px + var(--safe-bottom)); /* lindungi home indicator */
+    border-top:1px solid var(--border-subtle);
+    flex:0 0 auto;
+  }
+  .admin-chip{
+    display:flex;align-items:center;gap:11px;padding:10px;border-radius:16px;
+    background:var(--surface-soft);border:1px solid var(--border-subtle);
+  }
+  .admin-avatar{
+    width:38px;height:38px;border-radius:12px;flex:0 0 38px;
+    background:linear-gradient(135deg,#0ea5e9,#10b981);
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;font-weight:800;font-size:.85rem;
+  }
+  .admin-chip-txt{min-width:0;}
+  .admin-chip-txt strong{display:block;font-size:.82rem;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .admin-chip-txt span{font-size:.68rem;color:var(--mint-accent);font-weight:700;}
+
+  .logout-btn{
+    display:flex;align-items:center;gap:10px;
+    width:100%;margin-top:10px;padding:11px 14px;
+    border-radius:14px;border:1px solid var(--border-subtle);
+    background:var(--surface-soft);color:var(--text-muted);
+    font-family:inherit;font-size:.84rem;font-weight:700;
+    cursor:pointer;transition:var(--spring);
+  }
+  .logout-btn:hover{
+    background:#fef2f2;border-color:var(--rose);color:var(--rose);
+    transform:translateY(-1px);
+  }
+  [data-theme="dark"] .logout-btn:hover{background:rgba(239,68,68,.12);color:#f87171;}
+
+  /* ---------- MAIN ---------- */
+  .main-area{flex:1;min-width:0;display:flex;flex-direction:column;}
+
+  .topbar{
+    position:sticky;top:0;z-index:800;
+    background:color-mix(in srgb,var(--surface-card) 82%,transparent);
+    backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+    border-bottom:1px solid var(--border-subtle);
+    padding:14px 24px;
+    padding-top:calc(14px + var(--safe-top));       /* lindungi notch */
+    padding-left:calc(24px + var(--safe-left));
+    padding-right:calc(24px + var(--safe-right));
+    display:flex;align-items:center;gap:14px;
+  }
+  .hamburger{
+    display:none;width:40px;height:40px;border-radius:12px;
+    background:var(--surface-soft);border:1px solid var(--border-subtle);
+    color:var(--text-main);cursor:pointer;font-size:1rem;
+  }
+  .page-title h2{font-family:'Outfit',sans-serif;font-size:1.2rem;font-weight:800;letter-spacing:-.01em;line-height:1.15;}
+  .page-title p{font-size:.76rem;color:var(--text-muted);font-weight:600;}
+
+  .topbar-spacer{flex:1;}
+
+  .fb-indicator{
+    display:inline-flex;align-items:center;gap:6px;padding:6px 12px;
+    border-radius:20px;font-size:.72rem;font-weight:800;
+    background:var(--surface-soft);border:1px solid var(--border-subtle);
+  }
+  .fb-indicator .dot{
+    width:8px;height:8px;border-radius:50%;background:var(--mint-accent);
+    box-shadow:0 0 8px rgba(16,185,129,.7);
+  }
+  .fb-indicator.connecting .dot{
+    background:var(--sand-gold);box-shadow:0 0 8px rgba(245,158,11,.7);
+  }
+
+  .top-search{
+    display:flex;align-items:center;gap:9px;
+    background:var(--surface-soft);border:1.5px solid var(--border-subtle);
+    border-radius:30px;padding:9px 16px;min-width:220px;
+    transition:var(--spring);
+  }
+  .top-search:focus-within{border-color:var(--sky-primary);box-shadow:0 0 0 4px rgba(2,132,199,.1);}
+  .top-search i{color:var(--text-subtle);font-size:.85rem;}
+  .top-search input{
+    border:none;background:transparent;outline:none;font-family:inherit;
+    font-size:.85rem;color:var(--text-main);width:100%;
+  }
+
+  .icon-btn{
+    width:40px;height:40px;border-radius:13px;
+    background:var(--surface-card);border:1px solid var(--border-subtle);
+    color:var(--text-main);display:flex;align-items:center;justify-content:center;
+    font-size:.92rem;cursor:pointer;transition:var(--spring);position:relative;flex:0 0 40px;
+  }
+  .icon-btn:hover{transform:translateY(-2px);box-shadow:var(--shadow-float);border-color:var(--sky-primary);color:var(--sky-primary);}
+  .icon-btn .dot{
+    position:absolute;top:8px;right:8px;width:8px;height:8px;border-radius:50%;
+    background:var(--rose);border:2px solid var(--surface-card);
+  }
+
+  .content{
+    padding:24px;
+    padding-left:calc(24px + var(--safe-left));
+    padding-right:calc(24px + var(--safe-right));
+    padding-bottom:calc(28px + var(--safe-bottom));  /* ruang bawah untuk home indicator */
+    flex:1;
+    max-width:1400px;
+    width:100%;
+    margin:0 auto;
+  }
+
+  .view{display:none;animation:fadeUp .38s cubic-bezier(.16,1,.3,1);}
+  .view.active{display:block;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+
+  /* ---------- STAT CARDS ---------- */
+  .stat-grid{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:18px;margin-bottom:24px;
+  }
+  .stat-card{
+    background:var(--surface-card);border:1px solid var(--border-subtle);
+    border-radius:var(--radius-lg);padding:20px;
+    box-shadow:var(--shadow-ambient);transition:var(--spring);position:relative;overflow:hidden;
+  }
+  .stat-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-float);}
+  .stat-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;}
+  .stat-icon{
+    width:46px;height:46px;border-radius:15px;display:flex;align-items:center;justify-content:center;
+    font-size:1.12rem;color:#fff;
+  }
+  .si-sky{background:linear-gradient(135deg,#0ea5e9,#0369a1);box-shadow:0 8px 18px rgba(2,132,199,.28);}
+  .si-mint{background:linear-gradient(135deg,#34d399,#059669);box-shadow:0 8px 18px rgba(16,185,129,.28);}
+  .si-gold{background:linear-gradient(135deg,#fbbf24,#d97706);box-shadow:0 8px 18px rgba(245,158,11,.28);}
+  .si-violet{background:linear-gradient(135deg,#a78bfa,#7c3aed);box-shadow:0 8px 18px rgba(124,58,237,.28);}
+  .delta{
+    font-size:.72rem;font-weight:800;padding:4px 9px;border-radius:20px;
+    display:inline-flex;align-items:center;gap:4px;
+  }
+  .delta.up{background:var(--mint-soft);color:#059669;}
+  .delta.down{background:#fef2f2;color:#dc2626;}
+  [data-theme="dark"] .delta.up{background:rgba(16,185,129,.14);color:#34d399;}
+  [data-theme="dark"] .delta.down{background:rgba(239,68,68,.14);color:#f87171;}
+  .stat-value{font-family:'Outfit',sans-serif;font-size:1.9rem;font-weight:800;letter-spacing:-.02em;line-height:1;}
+  .stat-label{font-size:.8rem;color:var(--text-muted);font-weight:600;margin-top:5px;}
+
+  /* ---------- PANELS ---------- */
+  .grid-2{display:grid;grid-template-columns:1.55fr 1fr;gap:20px;margin-bottom:24px;}
+  .grid-2-even{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;}
+  @media (max-width:1100px){.grid-2,.grid-2-even{grid-template-columns:1fr;}}
+
+  .panel{
+    background:var(--surface-card);border:1px solid var(--border-subtle);
+    border-radius:var(--radius-lg);box-shadow:var(--shadow-ambient);
+    overflow:hidden;
+  }
+  .panel-head{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:18px 22px;border-bottom:1px solid var(--border-subtle);flex-wrap:wrap;
+  }
+  .panel-head h3{font-family:'Outfit',sans-serif;font-size:1.02rem;font-weight:800;display:flex;align-items:center;gap:9px;}
+  .panel-head h3 i{color:var(--sky-primary);font-size:.95rem;}
+  .panel-head p{font-size:.76rem;color:var(--text-muted);margin-top:2px;}
+  .panel-body{padding:22px;}
+
+  /* ---------- BAR CHART ---------- */
+  .bar-chart{display:flex;align-items:flex-end;gap:14px;height:210px;padding-top:10px;}
+  .bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:9px;height:100%;justify-content:flex-end;}
+  .bar-track{
+    width:100%;max-width:54px;flex:1;display:flex;align-items:flex-end;
+    background:var(--surface-soft);border-radius:12px;overflow:hidden;
+    border:1px solid var(--border-subtle);
+  }
+  .bar-fill{
+    width:100%;border-radius:11px 11px 0 0;
+    transition:height .8s cubic-bezier(.16,1,.3,1);
+    position:relative;
+  }
+  .bar-fill span{
+    position:absolute;top:-22px;left:50%;transform:translateX(-50%);
+    font-size:.72rem;font-weight:800;color:var(--text-main);
+  }
+  .bar-lbl{font-size:.72rem;font-weight:700;color:var(--text-muted);text-align:center;white-space:nowrap;}
+
+  /* ---------- DONUT ---------- */
+  .donut-wrap{display:flex;align-items:center;gap:24px;flex-wrap:wrap;justify-content:center;}
+  .donut{
+    width:172px;height:172px;border-radius:50%;position:relative;flex:0 0 172px;
+    transition:var(--spring);
+  }
+  .donut::after{
+    content:'';position:absolute;inset:26px;border-radius:50%;
+    background:var(--surface-card);
+  }
+  .donut-center{
+    position:absolute;inset:0;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;z-index:2;
+  }
+  .donut-center strong{font-family:'Outfit',sans-serif;font-size:1.7rem;font-weight:800;line-height:1;}
+  .donut-center span{font-size:.68rem;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:.06em;}
+  .legend{display:flex;flex-direction:column;gap:11px;flex:1;min-width:170px;}
+  .legend-row{display:flex;align-items:center;gap:10px;font-size:.82rem;}
+  .legend-dot{width:11px;height:11px;border-radius:4px;flex:0 0 11px;}
+  .legend-row strong{margin-left:auto;font-weight:800;}
+
+  /* ---------- TABLE ---------- */
+  .table-wrap{
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior-x:contain;          /* elak laman bergeser ketika swipe */
+  }
+  table{width:100%;border-collapse:collapse;min-width:760px;}
+  thead th{
+    text-align:left;font-size:.7rem;font-weight:800;letter-spacing:.07em;
+    text-transform:uppercase;color:var(--text-subtle);
+    padding:13px 18px;background:var(--surface-soft);
+    border-bottom:1px solid var(--border-subtle);white-space:nowrap;
+  }
+  tbody td{padding:13px 18px;border-bottom:1px solid var(--border-subtle);font-size:.86rem;vertical-align:middle;}
+  tbody tr{transition:var(--spring);}
+  tbody tr:hover{background:var(--surface-soft);}
+  tbody tr:last-child td{border-bottom:none;}
+
+  .cell-dest{display:flex;align-items:center;gap:12px;min-width:230px;}
+  .cell-thumb{
+    width:46px;height:46px;border-radius:13px;object-fit:cover;flex:0 0 46px;
+    border:1px solid var(--border-subtle);background:var(--surface-soft);
+  }
+  .cell-dest strong{display:block;font-weight:800;font-size:.87rem;line-height:1.25;}
+  .cell-dest span{font-size:.72rem;color:var(--text-subtle);}
+
+  .badge{
+    display:inline-flex;align-items:center;gap:5px;
+    padding:4px 11px;border-radius:20px;font-size:.7rem;font-weight:800;
+    text-transform:capitalize;white-space:nowrap;
+  }
+  .star-cell{font-weight:800;color:#d97706;white-space:nowrap;}
+
+  .row-actions{display:flex;gap:7px;justify-content:flex-end;}
+  .mini-btn{
+    width:34px;height:34px;border-radius:11px;border:1px solid var(--border-subtle);
+    background:var(--surface-card);color:var(--text-muted);
+    display:inline-flex;align-items:center;justify-content:center;
+    font-size:.82rem;cursor:pointer;transition:var(--spring);
+  }
+  .mini-btn:hover{transform:translateY(-2px);box-shadow:var(--shadow-ambient);}
+  .mini-btn.edit:hover{border-color:var(--sky-primary);color:var(--sky-primary);}
+  .mini-btn.del:hover{border-color:var(--rose);color:var(--rose);}
+  .mini-btn.star:hover{border-color:var(--sand-gold);color:var(--sand-gold);}
+  .mini-btn.star.on{background:#fffbeb;border-color:var(--sand-gold);color:var(--sand-gold);}
+  [data-theme="dark"] .mini-btn.star.on{background:rgba(245,158,11,.15);}
+
+  /* ---------- BUTTONS ---------- */
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    padding:10px 18px;border-radius:26px;border:none;
+    font-family:inherit;font-size:.84rem;font-weight:800;cursor:pointer;
+    transition:var(--spring);white-space:nowrap;
+  }
+  .btn-sky{background:linear-gradient(135deg,var(--sky-primary),var(--sky-deep));color:#fff;box-shadow:0 6px 16px rgba(2,132,199,.28);}
+  .btn-mint{background:linear-gradient(135deg,var(--mint-accent),#059669);color:#fff;box-shadow:0 6px 16px rgba(16,185,129,.26);}
+  .btn-ghost{background:var(--surface-card);border:1px solid var(--border-subtle);color:var(--text-main);}
+  .btn-danger{background:linear-gradient(135deg,#f43f5e,#dc2626);color:#fff;box-shadow:0 6px 16px rgba(239,68,68,.26);}
+  .btn:hover{transform:translateY(-2px);box-shadow:var(--shadow-float);}
+  .btn-sm{padding:7px 14px;font-size:.76rem;}
+
+  /* ---------- TOOLBAR ---------- */
+  .toolbar{
+    display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+    padding:16px 22px;border-bottom:1px solid var(--border-subtle);
+  }
+  .tb-search{
+    display:flex;align-items:center;gap:9px;flex:1;min-width:190px;
+    background:var(--surface-soft);border:1.5px solid var(--border-subtle);
+    border-radius:26px;padding:9px 16px;transition:var(--spring);
+  }
+  .tb-search:focus-within{border-color:var(--sky-primary);box-shadow:0 0 0 4px rgba(2,132,199,.1);}
+  .tb-search i{color:var(--text-subtle);font-size:.85rem;}
+  .tb-search input{border:none;background:transparent;outline:none;font-family:inherit;font-size:.85rem;color:var(--text-main);width:100%;}
+  .select-clean{
+    font-family:inherit;font-size:.83rem;font-weight:700;color:var(--text-main);
+    background:var(--surface-soft);border:1.5px solid var(--border-subtle);
+    border-radius:26px;padding:10px 16px;outline:none;cursor:pointer;transition:var(--spring);
+  }
+  .select-clean:focus{border-color:var(--sky-primary);}
+
+  /* ---------- FORM ---------- */
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .form-grid .full{grid-column:1/-1;}
+  @media (max-width:640px){.form-grid{grid-template-columns:1fr;}}
+  .field label{
+    display:block;font-size:.76rem;font-weight:800;color:var(--text-muted);
+    margin-bottom:7px;text-transform:uppercase;letter-spacing:.04em;
+  }
+  .field input[type=text],.field input[type=number],.field input[type=url],.field select,.field textarea{
+    width:100%;font-family:inherit;font-size:.88rem;color:var(--text-main);
+    background:var(--surface-soft);border:1.5px solid var(--border-subtle);
+    border-radius:14px;padding:11px 14px;outline:none;transition:var(--spring);resize:vertical;
+  }
+  .field input:focus,.field select:focus,.field textarea:focus{
+    border-color:var(--sky-primary);box-shadow:0 0 0 4px rgba(2,132,199,.1);background:var(--surface-card);
+  }
+  .field textarea{min-height:96px;line-height:1.55;}
+  .switch-row{
+    display:flex;align-items:center;justify-content:space-between;gap:14px;
+    background:var(--surface-soft);border:1px solid var(--border-subtle);
+    border-radius:14px;padding:13px 16px;
+  }
+  .switch-row span{font-size:.85rem;font-weight:700;}
+  .switch{
+    position:relative;width:48px;height:27px;flex:0 0 48px;border-radius:20px;
+    background:var(--border-subtle);cursor:pointer;transition:var(--spring);border:none;
+  }
+  .switch::after{
+    content:'';position:absolute;top:3px;left:3px;width:21px;height:21px;border-radius:50%;
+    background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.2);transition:var(--spring);
+  }
+  .switch.on{background:var(--mint-accent);}
+  .switch.on::after{transform:translateX(21px);}
+
+  #picker-map{width:100%;height:220px;border-radius:16px;border:1px solid var(--border-subtle);z-index:5;}
+  .map-hint{font-size:.72rem;color:var(--text-subtle);margin-top:7px;display:flex;align-items:center;gap:6px;}
+
+  .img-preview{
+    width:100%;height:150px;border-radius:16px;object-fit:cover;
+    border:1px solid var(--border-subtle);background:var(--surface-soft);
+    display:block;margin-top:10px;
+  }
+
+  /* ---------- MODAL ---------- */
+  .overlay{
+    position:fixed;inset:0;z-index:3000;display:none;
+    align-items:center;justify-content:center;
+    padding:20px;
+    padding-top:calc(20px + var(--safe-top));
+    padding-bottom:calc(20px + var(--safe-bottom));
+    padding-left:calc(20px + var(--safe-left));
+    padding-right:calc(20px + var(--safe-right));
+    background:rgba(15,23,42,.5);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+    opacity:0;transition:opacity .28s ease;
+    overscroll-behavior:contain;
+  }
+  .overlay.open{display:flex;opacity:1;}
+  .modal{
+    background:var(--surface-card);border:1px solid var(--border-subtle);
+    border-radius:var(--radius-xl);width:100%;max-width:760px;
+    max-height:92vh;
+    max-height:92dvh;                       /* tinggi dinamik — elak UI browser tersembunyi */
+    display:flex;flex-direction:column;box-shadow:var(--shadow-deep);
+    animation:popIn .36s cubic-bezier(.16,1,.3,1);overflow:hidden;
+  }
+  .modal.narrow{max-width:440px;}
+  @keyframes popIn{from{transform:translateY(26px) scale(.97);opacity:0;}to{transform:translateY(0) scale(1);opacity:1;}}
+  .modal-head{
+    display:flex;align-items:center;gap:14px;
+    padding:20px 24px;border-bottom:1px solid var(--border-subtle);
+    flex:0 0 auto;
+  }
+  .modal-head h3{font-family:'Outfit',sans-serif;font-size:1.15rem;font-weight:800;flex:1;}
+  .modal-head p{font-size:.78rem;color:var(--text-muted);font-weight:600;}
+  .modal-body{
+    padding:24px;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior:contain;
+    flex:1 1 auto;
+    min-height:0;                            /* penting untuk flex scroll */
+  }
+  .modal-foot{
+    padding:16px 24px;border-top:1px solid var(--border-subtle);
+    display:flex;gap:12px;justify-content:flex-end;flex-wrap:wrap;
+    flex:0 0 auto;
+  }
+  .close-x{
+    width:38px;height:38px;border-radius:12px;border:1px solid var(--border-subtle);
+    background:var(--surface-soft);color:var(--text-muted);cursor:pointer;
+    font-size:1rem;display:flex;align-items:center;justify-content:center;transition:var(--spring);
+    flex:0 0 38px;
+  }
+  .close-x:hover{background:var(--rose);color:#fff;border-color:var(--rose);transform:rotate(90deg);}
+
+  .confirm-icon{
+    width:64px;height:64px;border-radius:20px;margin:0 auto 16px;
+    background:#fef2f2;color:var(--rose);display:flex;align-items:center;justify-content:center;font-size:1.6rem;
+  }
+  [data-theme="dark"] .confirm-icon{background:rgba(239,68,68,.14);}
+
+  /* ---------- GEMS ---------- */
+  .gem-row{
+    display:flex;gap:16px;align-items:flex-start;
+    padding:18px 22px;border-bottom:1px solid var(--border-subtle);transition:var(--spring);
+  }
+  .gem-row:last-child{border-bottom:none;}
+  .gem-row:hover{background:var(--surface-soft);}
+  .gem-ico{
+    width:46px;height:46px;border-radius:15px;flex:0 0 46px;
+    background:linear-gradient(135deg,#c7d2fe,#818cf8);color:#fff;
+    display:flex;align-items:center;justify-content:center;font-size:1.05rem;
+  }
+  .gem-info{flex:1;min-width:0;}
+  .gem-info strong{font-size:.92rem;font-weight:800;display:block;margin-bottom:3px;}
+  .gem-info p{font-size:.81rem;color:var(--text-muted);line-height:1.5;}
+  .gem-info .meta{font-size:.7rem;color:var(--text-subtle);margin-top:7px;font-weight:700;display:flex;gap:14px;flex-wrap:wrap;}
+  .gem-actions{display:flex;gap:8px;flex-shrink:0;}
+
+  .status-pill{
+    font-size:.68rem;font-weight:800;padding:4px 11px;border-radius:20px;
+    text-transform:uppercase;letter-spacing:.05em;
+  }
+  .sp-pending{background:#fef3c7;color:#b45309;}
+  .sp-approved{background:var(--mint-soft);color:#059669;}
+  .sp-rejected{background:#fee2e2;color:#b91c1c;}
+  [data-theme="dark"] .sp-pending{background:rgba(245,158,11,.16);color:#fbbf24;}
+  [data-theme="dark"] .sp-approved{background:rgba(16,185,129,.15);color:#34d399;}
+  [data-theme="dark"] .sp-rejected{background:rgba(239,68,68,.15);color:#f87171;}
+
+  .empty-state{padding:56px 24px;text-align:center;color:var(--text-muted);}
+  .empty-state i{font-size:2.6rem;opacity:.28;margin-bottom:14px;display:block;}
+  .empty-state h4{font-weight:800;margin-bottom:6px;color:var(--text-main);}
+  .empty-state p{font-size:.84rem;}
+
+  .prog-track{height:7px;border-radius:20px;background:var(--border-subtle);overflow:hidden;min-width:90px;}
+  .prog-fill{height:100%;border-radius:20px;background:linear-gradient(90deg,var(--sky-primary),var(--mint-accent));transition:width .7s cubic-bezier(.16,1,.3,1);}
+
+  .pager{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:16px 22px;border-top:1px solid var(--border-subtle);flex-wrap:wrap;
+  }
+  .pager-info{font-size:.79rem;color:var(--text-muted);font-weight:600;}
+  .pager-btns{display:flex;gap:7px;flex-wrap:wrap;}
+  .pg-btn{
+    min-width:36px;height:36px;padding:0 12px;border-radius:11px;
+    border:1px solid var(--border-subtle);background:var(--surface-card);
+    color:var(--text-muted);font-family:inherit;font-size:.8rem;font-weight:800;
+    cursor:pointer;transition:var(--spring);
+  }
+  .pg-btn:hover:not(:disabled){border-color:var(--sky-primary);color:var(--sky-primary);}
+  .pg-btn.active{background:linear-gradient(135deg,var(--sky-primary),var(--sky-deep));border-color:transparent;color:#fff;}
+  .pg-btn:disabled{opacity:.4;cursor:not-allowed;}
+
+  .setting-row{
+    display:flex;align-items:center;justify-content:space-between;gap:16px;
+    padding:16px 0;border-bottom:1px solid var(--border-subtle);flex-wrap:wrap;
+  }
+  .setting-row:last-child{border-bottom:none;}
+  .setting-row strong{font-size:.89rem;font-weight:800;display:block;}
+  .setting-row p{font-size:.78rem;color:var(--text-muted);margin-top:2px;max-width:520px;}
+
+  .toast{
+    position:fixed;
+    top:calc(22px + var(--safe-top));       /* elak notch */
+    left:50%;transform:translateX(-50%) translateY(-70px);
+    background:var(--text-main);color:#fff;padding:13px 24px;border-radius:40px;
+    font-size:.85rem;font-weight:700;box-shadow:var(--shadow-deep);z-index:6000;
+    display:flex;align-items:center;gap:10px;opacity:0;pointer-events:none;
+    transition:all .35s cubic-bezier(.16,1,.3,1);
+    max-width:calc(100vw - 40px - var(--safe-left) - var(--safe-right));
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .toast.success i{color:#34d399;}
+  .toast.error i{color:#f87171;}
+  .toast.info i{color:#7dd3fc;}
+
+  .scrim{
+    position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:850;
+    opacity:0;pointer-events:none;transition:opacity .3s ease;display:none;
+  }
+
+  /* ================= LOGIN SCREEN (GLASSMORPHISM) ================= */
+  .login-screen{
+    position:fixed;inset:0;z-index:10000;
+    display:flex;align-items:center;justify-content:center;
+    padding:20px;
+    padding-top:calc(20px + var(--safe-top));
+    padding-bottom:calc(20px + var(--safe-bottom));
+    padding-left:calc(20px + var(--safe-left));
+    padding-right:calc(20px + var(--safe-right));
+    background:linear-gradient(135deg,#082f49 0%,#0369a1 45%,#0ea5e9 100%);
+    overflow-y:auto;                        /* boleh scroll bila skrin rendah */
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior:contain;
+    opacity:1;visibility:visible;
+    transition:opacity .6s ease,visibility .6s ease;
+  }
+  .login-screen.hidden{opacity:0;visibility:hidden;pointer-events:none;}
+
+  .login-blobs{position:absolute;inset:0;overflow:hidden;pointer-events:none;}
+  .blob{
+    position:absolute;border-radius:50%;
+    filter:blur(70px);opacity:.55;
+    animation:blobFloat 20s ease-in-out infinite;
+    will-change:transform;
+  }
+  .blob-1{width:420px;height:420px;background:#10b981;top:-120px;left:-120px;}
+  .blob-2{width:520px;height:520px;background:#38bdf8;bottom:-180px;right:-180px;animation-delay:-7s;}
+  .blob-3{width:380px;height:380px;background:#f59e0b;top:45%;left:55%;animation-delay:-13s;opacity:.35;}
+  @keyframes blobFloat{
+    0%,100%{transform:translate(0,0) scale(1);}
+    33%{transform:translate(70px,-50px) scale(1.12);}
+    66%{transform:translate(-50px,70px) scale(.92);}
+  }
+
+  .login-card{
+    position:relative;z-index:2;
+    width:100%;max-width:420px;
+    margin:auto;                            /* center + kekal scroll-safe */
+    flex-shrink:0;
+    padding:42px 36px 34px;
+    border-radius:30px;
+    background:rgba(255,255,255,.12);
+    border:1px solid rgba(255,255,255,.25);
+    backdrop-filter:blur(26px) saturate(180%);
+    -webkit-backdrop-filter:blur(26px) saturate(180%);
+    box-shadow:
+      0 24px 60px rgba(0,0,0,.35),
+      inset 0 1px 0 rgba(255,255,255,.3),
+      inset 0 -1px 0 rgba(255,255,255,.08);
+    color:#fff;
+    animation:cardIn .8s cubic-bezier(.16,1,.3,1);
+  }
+  @keyframes cardIn{
+    from{opacity:0;transform:translateY(34px) scale(.94);}
+    to{opacity:1;transform:translateY(0) scale(1);}
+  }
+  .login-card.shake{animation:shakeCard .5s cubic-bezier(.36,.07,.19,.97);}
+  @keyframes shakeCard{
+    10%,90%{transform:translateX(-2px);}
+    20%,80%{transform:translateX(4px);}
+    30%,50%,70%{transform:translateX(-8px);}
+    40%,60%{transform:translateX(8px);}
+  }
+
+  .login-brand{text-align:center;margin-bottom:30px;}
+  .login-brand .brand-mark{
+    width:66px;height:66px;border-radius:20px;margin:0 auto 16px;
+    background:rgba(255,255,255,.2);
+    border:1px solid rgba(255,255,255,.35);
+    backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+    display:flex;align-items:center;justify-content:center;
+    font-size:1.65rem;color:#fff;
+    box-shadow:0 10px 28px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.4);
+    animation:markPulse 3.2s ease-in-out infinite;
+  }
+  @keyframes markPulse{
+    0%,100%{transform:translateY(0);box-shadow:0 10px 28px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.4);}
+    50%{transform:translateY(-5px);box-shadow:0 16px 34px rgba(0,0,0,.32),inset 0 1px 0 rgba(255,255,255,.5);}
+  }
+  .login-brand h1{
+    font-family:'Outfit',sans-serif;font-size:1.75rem;font-weight:800;
+    letter-spacing:-.02em;margin-bottom:5px;
+  }
+  .login-brand p{
+    font-size:.72rem;color:rgba(255,255,255,.72);font-weight:700;
+    text-transform:uppercase;letter-spacing:.16em;
+  }
+
+  .login-field{
+    position:relative;margin-bottom:14px;
+    display:flex;align-items:center;gap:12px;
+    background:rgba(255,255,255,.1);
+    border:1px solid rgba(255,255,255,.2);
+    border-radius:16px;padding:0 16px;
+    transition:all .32s cubic-bezier(.16,1,.3,1);
+  }
+  .login-field:focus-within{
+    background:rgba(255,255,255,.18);
+    border-color:rgba(255,255,255,.55);
+    box-shadow:0 0 0 4px rgba(255,255,255,.12),0 8px 22px rgba(0,0,0,.15);
+    transform:translateY(-2px);
+  }
+  .login-field > i.lead{color:rgba(255,255,255,.7);font-size:.95rem;transition:color .3s;}
+  .login-field:focus-within > i.lead{color:#fff;}
+  .login-field input{
+    flex:1;background:transparent;border:none;outline:none;
+    font-family:inherit;font-size:.92rem;font-weight:600;
+    color:#fff;padding:16px 0;letter-spacing:.01em;
+    min-width:0;
+  }
+  .login-field input::placeholder{color:rgba(255,255,255,.5);font-weight:500;}
+  .toggle-pass{
+    background:transparent;border:none;cursor:pointer;
+    color:rgba(255,255,255,.6);font-size:.95rem;padding:6px;
+    transition:color .25s,transform .25s;
+  }
+  .toggle-pass:hover{color:#fff;transform:scale(1.1);}
+
+  .login-row{
+    display:flex;align-items:center;justify-content:space-between;
+    margin:6px 2px 20px;font-size:.8rem;
+  }
+  .login-row label{
+    display:flex;align-items:center;gap:8px;cursor:pointer;
+    color:rgba(255,255,255,.85);font-weight:600;user-select:none;
+  }
+  .login-row input[type=checkbox]{
+    appearance:none;-webkit-appearance:none;
+    width:17px;height:17px;border-radius:6px;
+    border:1.5px solid rgba(255,255,255,.5);
+    background:rgba(255,255,255,.08);cursor:pointer;
+    transition:all .25s;position:relative;
+  }
+  .login-row input[type=checkbox]:checked{
+    background:linear-gradient(135deg,#10b981,#059669);
+    border-color:transparent;
+  }
+  .login-row input[type=checkbox]:checked::after{
+    content:'\f00c';font-family:'Font Awesome 6 Free';font-weight:900;
+    font-size:.6rem;color:#fff;position:absolute;
+    top:50%;left:50%;transform:translate(-50%,-50%);
+  }
+  .login-row a{
+    color:rgba(255,255,255,.75);text-decoration:none;
+    font-weight:700;transition:color .25s;
+  }
+  .login-row a:hover{color:#fff;}
+
+  .login-btn{
+    width:100%;position:relative;overflow:hidden;
+    display:flex;align-items:center;justify-content:center;gap:10px;
+    padding:16px;border-radius:16px;border:none;
+    background:linear-gradient(135deg,#10b981,#059669);
+    color:#fff;font-family:inherit;font-size:.95rem;font-weight:800;
+    letter-spacing:.02em;cursor:pointer;
+    transition:all .32s cubic-bezier(.16,1,.3,1);
+    box-shadow:0 10px 26px rgba(16,185,129,.4);
+  }
+  .login-btn:hover:not(:disabled){
+    transform:translateY(-3px);
+    box-shadow:0 16px 36px rgba(16,185,129,.5);
+  }
+  .login-btn:active:not(:disabled){transform:translateY(-1px);}
+  .login-btn:disabled{cursor:not-allowed;}
+  .login-btn > *{transition:opacity .25s;}
+  .login-btn.loading > span,
+  .login-btn.loading > i{opacity:0;}
+  .login-btn.loading::after{
+    content:'';position:absolute;
+    width:22px;height:22px;border-radius:50%;
+    border:3px solid rgba(255,255,255,.3);
+    border-top-color:#fff;
+    animation:spinBtn .75s linear infinite;
+  }
+  @keyframes spinBtn{to{transform:rotate(360deg);}}
+  .login-btn.success{
+    background:linear-gradient(135deg,#34d399,#047857);
+    box-shadow:0 10px 26px rgba(16,185,129,.55);
+  }
+
+  .login-error{
+    display:none;align-items:center;gap:9px;
+    margin-top:12px;padding:11px 15px;border-radius:14px;
+    background:rgba(239,68,68,.18);
+    border:1px solid rgba(239,68,68,.35);
+    color:#fecaca;font-size:.78rem;font-weight:700;
+    animation:slideDown .35s cubic-bezier(.16,1,.3,1);
+  }
+  .login-error.show{display:flex;}
+  .login-error i{font-size:.9rem;flex:0 0 auto;}
+  @keyframes slideDown{
+    from{opacity:0;transform:translateY(-8px);}
+    to{opacity:1;transform:translateY(0);}
+  }
+
+  .login-foot{
+    position:absolute;
+    bottom:calc(20px + var(--safe-bottom));
+    left:0;right:0;text-align:center;
+    padding:0 calc(16px + var(--safe-left)) 0 calc(16px + var(--safe-right));
+    font-size:.7rem;color:rgba(255,255,255,.5);font-weight:600;
+    letter-spacing:.05em;z-index:2;pointer-events:none;
+  }
+
+  /* ---------- RESPONSIVE ---------- */
+  @media (max-width:1024px){
+    .sidebar{
+      position:fixed;left:0;top:0;transform:translateX(-100%);
+      box-shadow:var(--shadow-deep);border-right:none;
+      height:100vh;
+      height:100dvh;
+    }
+    .sidebar.open{transform:translateX(0);}
+    .scrim.show{display:block;opacity:1;pointer-events:auto;}
+    .hamburger{display:flex;align-items:center;justify-content:center;}
+    .top-search{display:none;}
+    .content{
+      padding:18px;
+      padding-left:calc(18px + var(--safe-left));
+      padding-right:calc(18px + var(--safe-right));
+      padding-bottom:calc(24px + var(--safe-bottom));
+    }
+    .topbar{
+      padding:12px 16px;
+      padding-top:calc(12px + var(--safe-top));
+      padding-left:calc(16px + var(--safe-left));
+      padding-right:calc(16px + var(--safe-right));
+    }
+  }
+  @media (max-width:640px){
+    .page-title p{display:none;}
+    .page-title h2{font-size:1.05rem;}
+    .fb-indicator span:not(.dot){display:none;}   /* jimat ruang */
+    .fb-indicator{padding:8px;}
+    .stat-value{font-size:1.6rem;}
+    .gem-row{flex-direction:column;}
+    .gem-actions{width:100%;}
+    .gem-actions .btn{flex:1;}
+    .modal{
+      max-height:94vh;
+      max-height:94dvh;
+      border-radius:24px;
+    }
+    .modal-head{padding:16px 18px;}
+    .modal-body{padding:18px;}
+    .modal-foot{padding:14px 18px;}
+    .modal-foot .btn{flex:1;}
+    .overlay{padding:12px;padding-top:calc(12px + var(--safe-top));padding-bottom:calc(12px + var(--safe-bottom));}
+    .donut{width:150px;height:150px;flex-basis:150px;}
+    .toolbar{padding:14px 16px;}
+    .panel-head{padding:16px 18px;}
+    .panel-body{padding:18px;}
+    .pager{padding:14px 16px;}
+  }
+  @media (max-width:480px){
+    .login-card{padding:34px 24px 28px;border-radius:26px;}
+    .login-brand h1{font-size:1.5rem;}
+    .login-brand .brand-mark{width:58px;height:58px;font-size:1.4rem;}
+  }
+  @media (max-height:560px) and (orientation:landscape){
+    .login-card{padding:26px 24px 22px;}
+    .login-brand{margin-bottom:18px;}
+    .login-brand .brand-mark{width:48px;height:48px;font-size:1.15rem;margin-bottom:10px;}
+    .login-brand h1{font-size:1.25rem;}
+    .login-field input{padding:12px 0;}
+    .login-btn{padding:13px;}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{
+      animation-duration:.001ms !important;
+      animation-iteration-count:1 !important;
+      transition-duration:.001ms !important;
+      scroll-behavior:auto !important;
+    }
+  }
+</style>
+</head>
+
+<body data-theme="light">
+
+<!-- ================= LOGIN SCREEN ================= -->
+<div class="login-screen" id="login-screen">
+  <div class="login-blobs">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
+
+  <div class="login-card" id="login-card">
+    <div class="login-brand">
+      <div class="brand-mark"><i class="fa-solid fa-mountain-sun"></i></div>
+      <h1 class="font-editorial">Taiping Admin</h1>
+      <p>Console Access 2026</p>
+    </div>
+
+    <form id="login-form" onsubmit="performLogin(event)" autocomplete="on">
+      <div class="login-field">
+        <i class="fa-solid fa-envelope lead"></i>
+        <input type="email" id="login-user" placeholder="Emel pentadbir"
+               autocomplete="username" required>
+      </div>
+
+      <div class="login-field">
+        <i class="fa-solid fa-lock lead"></i>
+        <input type="password" id="login-pass" placeholder="Kata laluan"
+               autocomplete="current-password" required>
+        <button type="button" class="toggle-pass" onclick="togglePassword(this)" tabindex="-1">
+          <i class="fa-regular fa-eye"></i>
+        </button>
+      </div>
+
+      <div class="login-row">
+        <label>
+          <input type="checkbox" id="login-remember" checked>
+          Ingat saya
+        </label>
+        <a href="#" onclick="event.preventDefault();showToast('Sila hubungi pentadbir sistem utama.','info')">Lupa kata laluan?</a>
+      </div>
+
+      <button type="submit" class="login-btn" id="login-btn">
+        <span>Log Masuk</span>
+        <i class="fa-solid fa-arrow-right"></i>
+      </button>
+
+      <div class="login-error" id="login-error">
+        <i class="fa-solid fa-circle-exclamation"></i>
+        <span id="login-error-text">Ralat tidak diketahui.</span>
+      </div>
+    </form>
+  </div>
+
+  <div class="login-foot">
+    © 2026 Taiping Local Explorer · Firebase Authentication
+  </div>
+</div>
+
+<div class="scrim" id="scrim" onclick="toggleSidebar(false)"></div>
+
+<div class="admin-shell">
+
+  <!-- ================= SIDEBAR ================= -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-mark"><i class="fa-solid fa-mountain-sun"></i></div>
+      <div class="brand-txt">
+        <h1 class="font-editorial">Taiping Admin</h1>
+        <span>Console 2026</span>
+      </div>
+    </div>
+
+    <div class="nav-scroll">
+      <div class="nav-label">Utama</div>
+      <button class="nav-item active" data-nav="dashboard" onclick="switchView('dashboard')">
+        <i class="fa-solid fa-chart-pie"></i> Papan Pemuka
+      </button>
+      <button class="nav-item" data-nav="destinations" onclick="switchView('destinations')">
+        <i class="fa-solid fa-location-dot"></i> Destinasi
+        <span class="nav-count" id="nav-count-dest">0</span>
+      </button>
+      <button class="nav-item" data-nav="categories" onclick="switchView('categories')">
+        <i class="fa-solid fa-shapes"></i> Kategori
+        <span class="nav-count" id="nav-count-cat">0</span>
+      </button>
+
+      <div class="nav-label">Komuniti</div>
+      <button class="nav-item" data-nav="gems" onclick="switchView('gems')">
+        <i class="fa-solid fa-gem"></i> Hidden Gems
+        <span class="nav-count" id="nav-count-gems">0</span>
+      </button>
+      <button class="nav-item" data-nav="users" onclick="switchView('users')">
+        <i class="fa-solid fa-users"></i> Pengguna & Pasport
+      </button>
+
+      <div class="nav-label">Sistem</div>
+      <button class="nav-item" data-nav="settings" onclick="switchView('settings')">
+        <i class="fa-solid fa-gear"></i> Tetapan
+      </button>
+    </div>
+
+    <div class="sidebar-foot">
+      <div class="admin-chip">
+        <div class="admin-avatar" id="admin-avatar-initials"><i class="fa-solid fa-user-shield"></i></div>
+        <div class="admin-chip-txt">
+          <strong id="admin-display-name">Pentadbir Taiping</strong>
+          <span id="admin-display-status"><i class="fa-solid fa-circle" style="font-size:.45rem;"></i> Firebase Online</span>
+        </div>
+      </div>
+      <button class="logout-btn" onclick="logout()">
+        <i class="fa-solid fa-right-from-bracket"></i> Log Keluar
+      </button>
+    </div>
+  </aside>
+
+  <!-- ================= MAIN ================= -->
+  <div class="main-area">
+
+    <header class="topbar">
+      <button class="hamburger" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
+
+      <div class="page-title">
+        <h2 class="font-editorial" id="page-title">Papan Pemuka</h2>
+        <p id="page-sub">Gambaran keseluruhan kandungan aplikasi Taiping Explorer</p>
+      </div>
+
+      <div class="topbar-spacer"></div>
+
+      <div class="fb-indicator" id="fb-status" title="Status sambungan Firebase Realtime Database">
+        <span class="dot"></span>
+        <span id="fb-status-text">Firebase Live</span>
+      </div>
+
+      <label class="top-search">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" id="global-search" placeholder="Cari destinasi..." oninput="globalSearch(this.value)">
+      </label>
+
+      <button class="icon-btn" id="theme-btn" onclick="toggleTheme()" title="Tukar Tema">
+        <i class="fa-solid fa-moon"></i>
+      </button>
+
+      <button class="icon-btn" onclick="showToast('Sistem dipautkan ke Firebase Realtime Database secara langsung.','info')" title="Pemberitahuan">
+        <i class="fa-regular fa-bell"></i>
+        <span class="dot"></span>
+      </button>
+    </header>
+
+    <main class="content">
+
+      <!-- ============ VIEW: DASHBOARD ============ -->
+      <section class="view active" id="view-dashboard">
+
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-top">
+              <div class="stat-icon si-sky"><i class="fa-solid fa-location-dot"></i></div>
+              <span class="delta up"><i class="fa-solid fa-database"></i> Live</span>
+            </div>
+            <div class="stat-value" id="stat-total-dest">0</div>
+            <div class="stat-label">Jumlah Destinasi Aktif</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-top">
+              <div class="stat-icon si-mint"><i class="fa-solid fa-users"></i></div>
+              <span class="delta up"><i class="fa-solid fa-shield-halved"></i> Firebase</span>
+            </div>
+            <div class="stat-value" id="stat-total-users">0</div>
+            <div class="stat-label">Pengguna Sebenar Berdaftar</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-top">
+              <div class="stat-icon si-gold"><i class="fa-solid fa-stamp"></i></div>
+              <span class="delta up"><i class="fa-solid fa-bolt"></i> Pasport</span>
+            </div>
+            <div class="stat-value" id="stat-checkins">0</div>
+            <div class="stat-label">Jumlah Cop Terkumpul</div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-top">
+              <div class="stat-icon si-violet"><i class="fa-solid fa-star"></i></div>
+              <span class="delta up"><i class="fa-solid fa-star-half-stroke"></i> Purata</span>
+            </div>
+            <div class="stat-value" id="stat-avg-rating">0.0</div>
+            <div class="stat-label">Purata Rating Destinasi</div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h3><i class="fa-solid fa-chart-column"></i> Destinasi Mengikut Kategori</h3>
+                <p>Taburan kandungan dalam direktori aplikasi</p>
+              </div>
+            </div>
+            <div class="panel-body">
+              <div class="bar-chart" id="bar-chart"></div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h3><i class="fa-solid fa-chart-pie"></i> Pecahan Kandungan</h3>
+                <p>Peratusan mengikut kategori</p>
+              </div>
+            </div>
+            <div class="panel-body">
+              <div class="donut-wrap">
+                <div class="donut" id="donut">
+                  <div class="donut-center">
+                    <strong id="donut-total">0</strong>
+                    <span>Item</span>
+                  </div>
+                </div>
+                <div class="legend" id="donut-legend"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-2-even">
+          <div class="panel">
+            <div class="panel-head">
+              <h3><i class="fa-solid fa-fire"></i> Destinasi Paling Popular</h3>
+              <button class="btn btn-ghost btn-sm" onclick="switchView('destinations')">Urus</button>
+            </div>
+            <div class="table-wrap">
+              <table style="min-width:520px;">
+                <thead>
+                  <tr><th>Destinasi</th><th>Rating</th><th>Simpanan</th></tr>
+                </thead>
+                <tbody id="top-dest-body"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <h3><i class="fa-solid fa-clock-rotate-left"></i> Aktiviti Terkini</h3>
+              <button class="btn btn-ghost btn-sm" onclick="clearActivity()">Kosongkan</button>
+            </div>
+            <div class="panel-body" id="activity-feed"
+                 style="padding:8px 0;max-height:360px;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;"></div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ============ VIEW: DESTINATIONS ============ -->
+      <section class="view" id="view-destinations">
+        <div class="panel">
+          <div class="toolbar">
+            <label class="tb-search">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="dest-search" placeholder="Cari nama destinasi..." oninput="destSearch(this.value)">
+            </label>
+
+            <select class="select-clean" id="dest-filter" onchange="destFilter(this.value)">
+              <option value="all">Semua Kategori</option>
+            </select>
+
+            <select class="select-clean" id="dest-sort" onchange="destSort(this.value)">
+              <option value="name">Susun: Nama (A-Z)</option>
+              <option value="rating">Susun: Rating Tertinggi</option>
+              <option value="featured">Susun: Featured Dahulu</option>
+            </select>
+
+            <button class="btn btn-sky" onclick="openDestModal()">
+              <i class="fa-solid fa-plus"></i> Tambah Destinasi
+            </button>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Destinasi</th>
+                  <th>Kategori</th>
+                  <th>Rating</th>
+                  <th>Harga</th>
+                  <th>Featured</th>
+                  <th style="text-align:right;">Tindakan</th>
+                </tr>
+              </thead>
+              <tbody id="dest-table-body"></tbody>
+            </table>
+          </div>
+
+          <div class="pager">
+            <div class="pager-info" id="pager-info">—</div>
+            <div class="pager-btns" id="pager-btns"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ VIEW: CATEGORIES ============ -->
+      <section class="view" id="view-categories">
+        <div class="grid-2">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h3><i class="fa-solid fa-shapes"></i> Senarai Kategori</h3>
+                <p>Kategori digunakan sebagai penapis dalam aplikasi pengguna</p>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table style="min-width:520px;">
+                <thead>
+                  <tr><th>Kategori</th><th>Jumlah Item</th><th style="text-align:right;">Tindakan</th></tr>
+                </thead>
+                <tbody id="cat-table-body"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <h3><i class="fa-solid fa-plus"></i> Tambah Kategori Baharu</h3>
+            </div>
+            <div class="panel-body">
+              <form onsubmit="addCategory(event)">
+                <div class="field" style="margin-bottom:14px;">
+                  <label>Kunci (key)</label>
+                  <input type="text" id="cat-key" placeholder="cth: shopping" required>
+                </div>
+                <div class="field" style="margin-bottom:14px;">
+                  <label>Nama Paparan</label>
+                  <input type="text" id="cat-label" placeholder="cth: Pusat Beli-Belah" required>
+                </div>
+                <div class="field" style="margin-bottom:14px;">
+                  <label>Ikon (Font Awesome class)</label>
+                  <input type="text" id="cat-icon" placeholder="cth: fa-bag-shopping" value="fa-tag">
+                </div>
+                <div class="field" style="margin-bottom:20px;">
+                  <label>Warna Label</label>
+                  <select id="cat-color">
+                    <option value="#0284c7">Sky Blue</option>
+                    <option value="#10b981">Mint Green</option>
+                    <option value="#f59e0b">Sand Gold</option>
+                    <option value="#8b5cf6">Violet</option>
+                    <option value="#ef4444">Rose</option>
+                  </select>
+                </div>
+                <button type="submit" class="btn btn-mint" style="width:100%;">
+                  <i class="fa-solid fa-circle-plus"></i> Simpan Kategori
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ VIEW: GEMS ============ -->
+      <section class="view" id="view-gems">
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <h3><i class="fa-solid fa-gem"></i> Cadangan Hidden Gems</h3>
+              <p>Cadangan daripada komuniti pengguna yang menunggu semakan</p>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-ghost btn-sm" onclick="gemFilter('all')">Semua</button>
+              <button class="btn btn-ghost btn-sm" onclick="gemFilter('pending')">Menunggu</button>
+              <button class="btn btn-ghost btn-sm" onclick="gemFilter('approved')">Diluluskan</button>
+            </div>
+          </div>
+          <div id="gems-list"></div>
+        </div>
+      </section>
+
+      <!-- ============ VIEW: USERS ============ -->
+      <section class="view" id="view-users">
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-top"><div class="stat-icon si-sky"><i class="fa-solid fa-user-check"></i></div></div>
+            <div class="stat-value" id="stat-active-users">0</div>
+            <div class="stat-label">Pengguna Sebenar Aktif</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-top"><div class="stat-icon si-gold"><i class="fa-solid fa-crown"></i></div></div>
+            <div class="stat-value" id="stat-masters">0</div>
+            <div class="stat-label">Master Taiping (5+ Cop)</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-top"><div class="stat-icon si-mint"><i class="fa-solid fa-percent"></i></div></div>
+            <div class="stat-value" id="stat-completion">0%</div>
+            <div class="stat-label">Kadar Lengkap Pasport</div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div>
+              <h3><i class="fa-solid fa-users"></i> Senarai Pengguna & Pasport Digital (Firebase)</h3>
+              <p>Akaun demo telah dibuang. Data dimuatkan secara langsung dari pangkalan data Firebase.</p>
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="syncFirebaseUsers()"><i class="fa-solid fa-rotate"></i> Muat Semula</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Pengguna</th>
+                  <th>Cop Diperoleh</th>
+                  <th>Kemajuan</th>
+                  <th>Tahap</th>
+                  <th>Status / Tarikh</th>
+                </tr>
+              </thead>
+              <tbody id="users-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ VIEW: SETTINGS ============ -->
+      <section class="view" id="view-settings">
+        <div class="grid-2">
+          <div class="panel">
+            <div class="panel-head">
+              <h3><i class="fa-solid fa-sliders"></i> Tetapan Aplikasi</h3>
+            </div>
+            <div class="panel-body">
+              <div class="setting-row">
+                <div>
+                  <strong>Mod Penyelenggaraan</strong>
+                  <p>Memaparkan notis penyelenggaraan kepada semua pengguna aplikasi.</p>
+                </div>
+                <button class="switch" onclick="toggleSwitch(this)"></button>
+              </div>
+              <div class="setting-row">
+                <div>
+                  <strong>Penyelarasan Firebase Realtime</strong>
+                  <p>Autosync perubahan destinasi ke Firebase Realtime Database secara berterusan.</p>
+                </div>
+                <button class="switch on" id="sw-firebase-sync" onclick="toggleSwitch(this)"></button>
+              </div>
+              <div class="setting-row">
+                <div>
+                  <strong>Notifikasi Cuaca Taiping</strong>
+                  <p>Hantar amaran cuaca automatik kepada pengguna mengikut lokasi.</p>
+                </div>
+                <button class="switch on" onclick="toggleSwitch(this)"></button>
+              </div>
+              <div class="setting-row">
+                <div>
+                  <strong>Cache PWA Offline</strong>
+                  <p>Simpan imej destinasi dalam cache untuk akses tanpa internet.</p>
+                </div>
+                <button class="switch on" onclick="toggleSwitch(this)"></button>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <h3><i class="fa-solid fa-database"></i> Pengurusan Data & Firebase</h3>
+            </div>
+            <div class="panel-body">
+              <div class="setting-row">
+                <div>
+                  <strong>Muat Naik Data Asal ke Firebase</strong>
+                  <p>Segerakkan 8 destinasi awal ke nod `destinations/` di Firebase anda.</p>
+                </div>
+                <button class="btn btn-sky btn-sm" onclick="pushAllToFirebase()"><i class="fa-solid fa-cloud-arrow-up"></i> Sinkron Firebase</button>
+              </div>
+              <div class="setting-row">
+                <div>
+                  <strong>Eksport Data Destinasi</strong>
+                  <p>Muat turun semua rekod destinasi dalam format JSON.</p>
+                </div>
+                <button class="btn btn-ghost btn-sm" onclick="exportData()"><i class="fa-solid fa-download"></i> Eksport</button>
+              </div>
+              <div class="setting-row">
+                <div>
+                  <strong>Import Data Destinasi</strong>
+                  <p>Pulihkan rekod daripada fail sandaran JSON.</p>
+                </div>
+                <label class="btn btn-ghost btn-sm" style="cursor:pointer;">
+                  <i class="fa-solid fa-upload"></i> Import
+                  <input type="file" accept="application/json" style="display:none;" onchange="importData(event)">
+                </label>
+              </div>
+              <div class="setting-row">
+                <div>
+                  <strong>Versi & Pangkalan Data</strong>
+                  <p>Firebase Project: <code>taipinglocalexplorer1</code> (asia-southeast1)</p>
+                </div>
+                <span class="status-pill sp-approved">Tersambung</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- ================= MODAL: DESTINATION FORM ================= -->
+<div class="overlay" id="dest-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="brand-mark" style="width:40px;height:40px;flex:0 0 40px;border-radius:13px;font-size:1rem;">
+        <i class="fa-solid fa-location-dot"></i>
+      </div>
+      <div style="flex:1;min-width:0;">
+        <h3 class="font-editorial" id="dest-modal-title">Tambah Destinasi</h3>
+        <p id="dest-modal-sub">Lengkapkan maklumat destinasi baharu</p>
+      </div>
+      <button class="close-x" onclick="closeDestModal()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <form id="dest-form" onsubmit="submitDestForm(event)" style="display:flex;flex-direction:column;flex:1;min-height:0;">
+      <div class="modal-body">
+        <div class="form-grid">
+
+          <div class="field full">
+            <label>Nama Destinasi</label>
+            <input type="text" id="f-name" placeholder="cth: Taman Tasik Taiping" required>
+          </div>
+
+          <div class="field">
+            <label>Kategori</label>
+            <select id="f-cat" required></select>
+          </div>
+
+          <div class="field">
+            <label>Rating (0 - 5)</label>
+            <input type="number" id="f-rating" min="0" max="5" step="0.1" value="4.8" required>
+          </div>
+
+          <div class="field">
+            <label>Harga / Kemasukan</label>
+            <input type="text" id="f-price" placeholder="cth: Percuma / Free" value="Percuma / Free">
+          </div>
+
+          <div class="field">
+            <label>Waktu Operasi</label>
+            <input type="text" id="f-hours" placeholder="cth: 7:00 AM - 10:00 PM" value="7:00 AM - 10:00 PM">
+          </div>
+
+          <div class="field">
+            <label>Latitud</label>
+            <input type="number" id="f-lat" step="0.000001" value="4.856900" required>
+          </div>
+
+          <div class="field">
+            <label>Longitud</label>
+            <input type="number" id="f-lng" step="0.000001" value="100.749700" required>
+          </div>
+
+          <div class="field full">
+            <label>Lokasi pada Peta</label>
+            <div id="picker-map"></div>
+            <div class="map-hint"><i class="fa-solid fa-hand-pointer"></i> Klik pada peta untuk menetapkan koordinat secara automatik.</div>
+          </div>
+
+          <div class="field full">
+            <label>URL Imej</label>
+            <input type="url" id="f-img" placeholder="https://..." oninput="previewImage(this.value)">
+            <img class="img-preview" id="f-img-preview" alt="Pratonton imej"
+                 src="https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=900&q=80">
+          </div>
+
+          <div class="field full">
+            <label>Penerangan</label>
+            <textarea id="f-desc" placeholder="Ceritakan keistimewaan destinasi ini..."></textarea>
+          </div>
+
+          <div class="field full">
+            <label>Tips Lawatan</label>
+            <textarea id="f-tips" placeholder="cth: Waktu pagi terbaik semasa kabus turun..." style="min-height:70px;"></textarea>
+          </div>
+
+          <div class="field full">
+            <div class="switch-row">
+              <span><i class="fa-solid fa-star" style="color:var(--sand-gold);margin-right:8px;"></i> Paparkan sebagai Destinasi Pilihan (Featured)</span>
+              <button type="button" class="switch" id="f-featured" onclick="toggleSwitch(this)"></button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="modal-foot">
+        <button type="button" class="btn btn-ghost" onclick="closeDestModal()">Batal</button>
+        <button type="submit" class="btn btn-sky"><i class="fa-solid fa-floppy-disk"></i> Simpan Destinasi</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ================= MODAL: CONFIRM ================= -->
+<div class="overlay" id="confirm-modal">
+  <div class="modal narrow">
+    <div class="modal-body" style="text-align:center;padding:34px 28px;">
+      <div class="confirm-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+      <h3 class="font-editorial" id="confirm-title" style="font-size:1.25rem;font-weight:800;margin-bottom:8px;">Padam Item?</h3>
+      <p id="confirm-text" style="font-size:.87rem;color:var(--text-muted);line-height:1.6;">Tindakan ini tidak boleh dibatalkan.</p>
+    </div>
+    <div class="modal-foot" style="justify-content:center;">
+      <button class="btn btn-ghost" onclick="closeConfirm()">Batal</button>
+      <button class="btn btn-danger" id="confirm-yes"><i class="fa-solid fa-trash"></i> Ya, Teruskan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= TOAST ================= -->
+<div class="toast" id="toast">
+  <i class="fa-solid fa-circle-check"></i>
+  <span id="toast-text">Berjaya!</span>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+
+<script type="module">
+/* =========================================================
+   FIREBASE MODULAR SDK — APP, ANALYTICS, RTDB, AUTH
+   ========================================================= */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics.js";
+import { getDatabase, ref, set, get, onValue, push, remove, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import {
+  getAuth,
+  setPersistence,
+  browserLocalPersistence,
+  browserSessionPersistence,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD6LlhanCK_B-PmIgigkUBiHLbesNlbjns",
+  authDomain: "taipinglocalexplorer1.firebaseapp.com",
+  databaseURL: "https://taipinglocalexplorer1-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "taipinglocalexplorer1",
+  storageBucket: "taipinglocalexplorer1.firebasestorage.app",
+  messagingSenderId: "132803064450",
+  appId: "1:132803064450:web:45cea4b84c92969e66ba9b",
+  measurementId: "G-3TNY8X89WB"
+};
+
+const app = initializeApp(firebaseConfig);
+let analytics = null;
+try { analytics = getAnalytics(app); } catch (e) { console.info("Analytics offline:", e.message); }
+const db = getDatabase(app);
+const auth = getAuth(app);
+
+function updateFirebaseIndicator(connected) {
+  const badge = document.getElementById('fb-status');
+  const text = document.getElementById('fb-status-text');
+  if (!badge || !text) return;
+  if (connected) { badge.classList.remove('connecting'); text.textContent = 'Firebase Tersambung'; }
+  else { badge.classList.add('connecting'); text.textContent = 'Menyambung...'; }
+}
+
+/* =========================================================
+   SCROLL LOCK (iOS-safe) — ganti body.style.overflow
+   ========================================================= */
+let _scrollLockY = 0;
+let _scrollLocked = false;
+
+function lockScroll(){
+  if (_scrollLocked) return;
+  _scrollLockY = window.scrollY || window.pageYOffset || 0;
+  const b = document.body;
+  b.style.position = 'fixed';
+  b.style.top = `-${_scrollLockY}px`;
+  b.style.left = '0';
+  b.style.right = '0';
+  b.style.width = '100%';
+  b.style.overflow = 'hidden';
+  b.classList.add('no-scroll');
+  _scrollLocked = true;
+}
+
+function unlockScroll(){
+  if (!_scrollLocked) return;
+  const b = document.body;
+  b.style.position = '';
+  b.style.top = '';
+  b.style.left = '';
+  b.style.right = '';
+  b.style.width = '';
+  b.style.overflow = '';
+  b.classList.remove('no-scroll');
+  _scrollLocked = false;
+  window.scrollTo(0, _scrollLockY);
+}
+
+/* =========================================================
+   STORAGE & SEEDS
+   ========================================================= */
+const LS_KEYS = { dests:'tp_admin_destinations', cats:'tp_admin_categories', gems:'tp_admin_gems', acts:'tp_admin_activity', theme:'tp_admin_theme' };
+
+const SEED_CATEGORIES = [
+  { key:'nature',   label:'Alam Semula Jadi', icon:'fa-leaf',        color:'#10b981' },
+  { key:'heritage', label:'Warisan Sejarah',  icon:'fa-landmark',    color:'#f59e0b' },
+  { key:'food',     label:'Makanan & Kopitiam', icon:'fa-utensils',  color:'#ef4444' },
+  { key:'cafe',     label:'Kafe Artisanal',   icon:'fa-mug-saucer',  color:'#8b5cf6' },
+  { key:'family',   label:'Rekreasi Keluarga', icon:'fa-people-roof', color:'#0284c7' }
+];
+
+const SEED_DESTINATIONS = [
+  { id:'dest_lake_gardens', name:'Taman Tasik Taiping', category:'nature', featured:true,
+    image:'https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=900&q=80',
+    rating:4.9, price:'Percuma / Free', coords:[4.8569,100.7497], saves:1240,
+    hours:'6:00 AM - 10:00 PM',
+    desc:'Taman awam terawal di Malaysia (1880). Pohon hujan Samanea Saman berusia lebih seabad melentur megah mencium permukaan air tasik yang tenang.',
+    tips:'Waktu pagi (7:00 - 9:00 AM) mempunyai cahaya emas yang sempurna untuk fotografi pantulan tasik.' },
+  { id:'dest_perak_museum', name:'Muzium Perak Taiping', category:'heritage', featured:true,
+    image:'https://images.unsplash.com/photo-1582555172866-f73bb12a2ab3?auto=format&fit=crop&w=900&q=80',
+    rating:4.8, price:'Dewasa RM5', coords:[4.8608,100.7456], saves:870,
+    hours:'9:00 AM - 5:00 PM',
+    desc:'Muzium tertua di Semenanjung Malaysia (1883) dengan senibina Victoria Neo-Klasik yang megah dan lebih 8,000 artifak sejarah berharga.',
+    tips:'Sangat sesuai dilawati ketika waktu hujan petang kerana ia berhawa dingin sepenuhnya.' },
+  { id:'dest_bukit_larut', name:'Bukit Larut (Maxwell Hill)', category:'nature', featured:true,
+    image:'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=900&q=80',
+    rating:4.8, price:'Percuma (Hiking)', coords:[4.8622,100.7925], saves:1035,
+    hours:'7:00 AM - 6:00 PM',
+    desc:'Stesen bukit tertua di Malaysia dengan ketinggian 1,250 meter. Udara segar bersuhu 15°C - 24°C dengan laluan berkabus dan panorama Selat Melaka.',
+    tips:'Bawa jaket ringan kerana kabus tebal sering turun pada awal pagi dan petang.' },
+  { id:'dest_antong_coffee', name:'Kilang Kopi Antong (1933)', category:'heritage', featured:true,
+    image:'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=900&q=80',
+    rating:4.9, price:'Masuk Percuma', coords:[4.8522,100.7308], saves:690,
+    hours:'8:30 AM - 5:30 PM',
+    desc:'Kilang pemanggang kopi kayu arang tertua di Malaysia yang masih beroperasi, menempatkan Vila Bersejarah Dr. Sun Yat-sen.',
+    tips:'Cuba sampel kopi segar percuma dan nikmati aroma kayu arang tradisional.' },
+  { id:'dest_zoo_taiping', name:'Zoo Taiping & Night Safari', category:'family', featured:true,
+    image:'https://images.unsplash.com/photo-1534188753412-3e26d0d618d6?auto=format&fit=crop&w=900&q=80',
+    rating:4.8, price:'Dewasa RM16 / Kanak RM8', coords:[4.8564,100.7501], saves:1420,
+    hours:'8:30 AM - 6:00 PM',
+    desc:'Zoo seluas 36 ekar dengan kandang terbuka meniru habitat hutan liar semula jadi. Pelopor Night Safari pertama di Malaysia.',
+    tips:'Pengalaman Night Safari dengan lampu spektrum lembut sangat menyeronokkan untuk kanak-kanak.' },
+  { id:'dest_burmese_pool', name:'Burmese Pool (Kolam Burma)', category:'nature', featured:false,
+    image:'https://images.unsplash.com/photo-1432405972618-c60b0225b8f9?auto=format&fit=crop&w=900&q=80',
+    rating:4.7, price:'Percuma / Free', coords:[4.8580,100.7621], saves:410,
+    hours:'7:00 AM - 6:30 PM',
+    desc:'Kolam sungai berbatu semula jadi yang jernih dan sejuk mengalir dari lereng bukit Maxwell.',
+    tips:'Elakkan mandi jika hujan lebat di hulu bukit demi keselamatan aliran air deras.' },
+  { id:'dest_kaki_puteh', name:'Kaki Puteh Cafe & Roastery', category:'cafe', featured:true,
+    image:'https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=900&q=80',
+    rating:4.9, price:'RM 12 - RM 28', coords:[4.8535,100.7428], saves:960,
+    hours:'9:00 AM - 7:00 PM',
+    desc:'Kafe OOTD artisanal yang menyajikan kopi pour-over, pastri sourdough segar dan suasana santai moden bertema minimalis.',
+    tips:'Sudut tingkap hadapan adalah port terbaik untuk foto aesthetic.' },
+  { id:'dest_ansari_cendol', name:'Ansari Famous Cendol (1940)', category:'food', featured:true,
+    image:'https://images.unsplash.com/photo-1563805042-7684c019e1cb?auto=format&fit=crop&w=900&q=80',
+    rating:4.8, price:'RM 3.50 - RM 6.50', coords:[4.8541,100.7420], saves:1580,
+    hours:'10:30 AM - 6:30 PM',
+    desc:'Cendol pulut dan kacang merah legasi lebih 80 tahun dengan santan segar dan gula Melaka asli harum.',
+    tips:'Nikmati bersama pasembur kuah kacang pekat panas.' }
+];
+
+const SEED_GEMS = [
+  { id:'gem_1', name:'Lorong Dahan Tasik Senyap', reason:'Sudut tasik terpencil berdekatan bekas kediaman Residen British. Sangat tenang untuk membaca buku & melukis.', by:'Aina R.', date:'2 hari lalu', status:'pending' },
+  { id:'gem_2', name:'Kopitiam Pokok Asam Lama', reason:'Port sarapan pagi warga emas Taiping dengan roti kukus kaya asli dan telur separuh masak segar.', by:'Hafiz M.', date:'5 hari lalu', status:'pending' }
+];
+
+const TOTAL_CHECKPOINTS = 6;
+
+const STATE = {
+  theme:'light', view:'dashboard',
+  destinations:[], categories:[], gems:[], users:[], activity:[],
+  search:'', catFilter:'all', sort:'name', page:1, perPage:6,
+  editingId:null, gemView:'all',
+  pickerMap:null, pickerMarker:null, confirmAction:null,
+  currentUser:null, authReady:false
+};
+
+const $ = id => document.getElementById(id);
+
+function saveLocal(key, val){ try{ localStorage.setItem(key, JSON.stringify(val)); }catch(e){ console.warn(e); } }
+function loadLocal(key, fallback){
+  try{ const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; }
+  catch(e){ return fallback; }
+}
+
+function showToast(msg, type='success'){
+  const t = $('toast');
+  if (!t) return;
+  const icons = { success:'fa-circle-check', error:'fa-circle-exclamation', info:'fa-circle-info' };
+  t.className = 'toast ' + type;
+  t.querySelector('i').className = 'fa-solid ' + (icons[type] || icons.success);
+  $('toast-text').textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+function uid(prefix){ return prefix + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+function esc(str){
+  return String(str == null ? '' : str)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+}
+function catMeta(key){
+  return STATE.categories.find(c => c.key === key) || { key, label:key, icon:'fa-tag', color:'#64748b' };
+}
+function logActivity(text, icon='fa-pen-to-square'){
+  STATE.activity.unshift({ text, icon,
+    time: new Date().toLocaleString('ms-MY', { hour:'2-digit', minute:'2-digit', day:'2-digit', month:'short' }) });
+  STATE.activity = STATE.activity.slice(0, 25);
+  saveLocal(LS_KEYS.acts, STATE.activity);
+}
+
+/* =========================================================
+   FIREBASE RTDB OPERATIONS
+   ========================================================= */
+async function pushAllToFirebase(){
+  try {
+    updateFirebaseIndicator(false);
+    await set(ref(db, 'destinations'), STATE.destinations);
+    logActivity('Semua data destinasi disegerakkan ke Firebase Realtime Database.', 'fa-cloud-arrow-up');
+    showToast('Data destinasi berjaya disegerakkan ke Firebase! ☁️', 'success');
+  } catch (err) {
+    console.error('Firebase save error:', err);
+    showToast('Ralat menyegerakkan ke Firebase: ' + err.message, 'error');
+  } finally { updateFirebaseIndicator(true); }
+}
+async function syncDestinationToFirebase(destItem) {
+  try { await set(ref(db, `destinations/${destItem.id}`), destItem); }
+  catch(e) { console.warn("Gagal simpan ke nod realtime:", e); }
+}
+async function removeDestinationFromFirebase(destId) {
+  try { await remove(ref(db, `destinations/${destId}`)); }
+  catch(e) { console.warn("Gagal buang dari nod realtime:", e); }
+}
+function listenToFirebaseDestinations() {
+  onValue(ref(db, 'destinations'), (snapshot) => {
+    updateFirebaseIndicator(true);
+    const data = snapshot.val();
+    if (data) {
+      if (Array.isArray(data)) STATE.destinations = data.filter(Boolean);
+      else if (typeof data === 'object') STATE.destinations = Object.values(data);
+      saveLocal(LS_KEYS.dests, STATE.destinations);
+      renderDestTable();
+      renderDashboard();
+    }
+  }, (error) => { console.warn("Firebase listener warning:", error); updateFirebaseIndicator(false); });
+}
+function syncFirebaseUsers() {
+  updateFirebaseIndicator(false);
+  get(ref(db, 'users')).then((snapshot) => {
+    updateFirebaseIndicator(true);
+    const val = snapshot.val();
+    if (val && typeof val === 'object') {
+      STATE.users = Object.keys(val).map(k => ({
+        id: k,
+        name: val[k].displayName || val[k].name || 'Pengguna Taiping',
+        email: val[k].email || 'Tanpa E-mel',
+        stamps: Number(val[k].stamps || (val[k].visitedPlaces ? Object.keys(val[k].visitedPlaces).length : 0)),
+        last: val[k].lastActive || 'Baru ini',
+        joined: val[k].createdAt ? new Date(val[k].createdAt).toLocaleDateString('ms-MY') : '2026'
+      }));
+    } else STATE.users = [];
+    renderUsers();
+    renderDashboard();
+    showToast(`Pengguna Firebase disegerakkan (${STATE.users.length} akaun aktif).`, 'info');
+  }).catch((err) => {
+    console.warn("Ralat memuat turun pengguna Firebase:", err);
+    STATE.users = [];
+    renderUsers();
+    renderDashboard();
+  });
+}
+
+/* =========================================================
+   NAVIGATION & UI
+   ========================================================= */
+function toggleSidebar(force){
+  const sb = $('sidebar'), sc = $('scrim');
+  const open = typeof force === 'boolean' ? force : !sb.classList.contains('open');
+  sb.classList.toggle('open', open);
+  sc.classList.toggle('show', open);
+
+  /* Kunci scroll badan hanya pada mod mobile drawer */
+  if (window.innerWidth <= 1024) {
+    if (open) lockScroll();
+    else if (!$('dest-modal').classList.contains('open')) unlockScroll();
+  }
+}
+
+const VIEW_META = {
+  dashboard:    { title:'Papan Pemuka',      sub:'Gambaran keseluruhan kandungan aplikasi Taiping Explorer' },
+  destinations: { title:'Destinasi',         sub:'Urus direktori tarikan, kemasukan dan koordinat peta' },
+  categories:   { title:'Kategori',          sub:'Urus kategori penapis untuk aplikasi pengguna' },
+  gems:         { title:'Hidden Gems',       sub:'Semak cadangan lokasi rahsia daripada komuniti' },
+  users:        { title:'Pengguna & Pasport', sub:'Pantau kemajuan cop pasport digital pengguna sebenar Firebase' },
+  settings:     { title:'Tetapan Sistem',    sub:'Konfigurasi aplikasi, pangkalan data Firebase dan keutamaan' }
+};
+
+function switchView(view){
+  STATE.view = view;
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  const target = $('view-' + view);
+  if (target) target.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.toggle('active', b.dataset.nav === view));
+  const meta = VIEW_META[view] || { title:'Admin', sub:'' };
+  $('page-title').textContent = meta.title;
+  $('page-sub').textContent = meta.sub;
+  if (view === 'dashboard')    renderDashboard();
+  if (view === 'destinations') renderDestTable();
+  if (view === 'categories')   renderCategories();
+  if (view === 'gems')         renderGems();
+  if (view === 'users')        renderUsers();
+  window.scrollTo({ top:0, behavior:'smooth' });
+  if (window.innerWidth <= 1024) toggleSidebar(false);
+}
+
+function toggleTheme(){
+  STATE.theme = STATE.theme === 'light' ? 'dark' : 'light';
+  document.body.setAttribute('data-theme', STATE.theme);
+  $('theme-btn').querySelector('i').className = STATE.theme === 'dark' ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+  saveLocal(LS_KEYS.theme, STATE.theme);
+  showToast(STATE.theme === 'dark' ? 'Mod gelap diaktifkan' : 'Mod cerah diaktifkan', 'info');
+}
+function toggleSwitch(el){ el.classList.toggle('on'); }
+
+/* =========================================================
+   RENDERING
+   ========================================================= */
+function renderDashboard(){
+  const dests = STATE.destinations;
+  const total = dests.length;
+  const avg = total ? (dests.reduce((s,d) => s + Number(d.rating || 0), 0) / total) : 0;
+  const totalStamps = STATE.users.reduce((s,u) => s + (u.stamps || 0), 0);
+  $('stat-total-dest').textContent  = total;
+  $('stat-total-users').textContent = STATE.users.length.toLocaleString('ms-MY');
+  $('stat-checkins').textContent    = totalStamps.toLocaleString('ms-MY');
+  $('stat-avg-rating').textContent  = avg.toFixed(1);
+  renderBarChart(); renderDonut(); renderTopDestinations(); renderActivityFeed();
+}
+
+function renderBarChart(){
+  const counts = STATE.categories.map(c => ({ ...c, count: STATE.destinations.filter(d => d.category === c.key).length }));
+  const max = Math.max(1, ...counts.map(c => c.count));
+  $('bar-chart').innerHTML = counts.map(c => {
+    const h = Math.max(6, Math.round((c.count / max) * 100));
+    return `<div class="bar-col" title="${esc(c.label)}: ${c.count} item">
+      <div class="bar-track"><div class="bar-fill" style="height:${h}%;background:linear-gradient(180deg,${c.color},${c.color}aa);"><span>${c.count}</span></div></div>
+      <div class="bar-lbl">${esc(c.label.split(' ')[0])}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderDonut(){
+  const total = STATE.destinations.length || 1;
+  const counts = STATE.categories.map(c => ({ ...c, count: STATE.destinations.filter(d => d.category === c.key).length }));
+  let acc = 0; const segs = [];
+  counts.forEach(c => {
+    const pct = (c.count / total) * 100;
+    if (pct > 0) segs.push(`${c.color} ${acc}% ${acc + pct}%`);
+    acc += pct;
+  });
+  if (!segs.length) segs.push('#e2e8f0 0% 100%');
+  $('donut').style.background = `conic-gradient(${segs.join(',')})`;
+  $('donut-total').textContent = STATE.destinations.length;
+  $('donut-legend').innerHTML = counts.map(c => {
+    const pct = Math.round((c.count / total) * 100);
+    return `<div class="legend-row"><span class="legend-dot" style="background:${c.color};"></span><span>${esc(c.label)}</span><strong>${pct}%</strong></div>`;
+  }).join('');
+}
+
+function renderTopDestinations(){
+  const top = [...STATE.destinations].sort((a,b) => (b.saves||0) - (a.saves||0)).slice(0,5);
+  $('top-dest-body').innerHTML = top.map(d => `
+    <tr>
+      <td><div class="cell-dest">
+        <img class="cell-thumb" src="${esc(d.image)}" alt="" onerror="this.style.opacity=.3">
+        <div><strong>${esc(d.name)}</strong><span>${esc(catMeta(d.category).label)}</span></div>
+      </div></td>
+      <td class="star-cell"><i class="fa-solid fa-star"></i> ${Number(d.rating).toFixed(1)}</td>
+      <td><strong>${(d.saves||0).toLocaleString('ms-MY')}</strong></td>
+    </tr>`).join('') || `<tr><td colspan="3" class="empty-state" style="padding:30px;">Tiada data</td></tr>`;
+}
+
+function renderActivityFeed(){
+  const feed = $('activity-feed');
+  if (!STATE.activity.length){
+    feed.innerHTML = `<div class="empty-state" style="padding:34px 20px;">
+      <i class="fa-regular fa-clock"></i><h4>Tiada Aktiviti</h4>
+      <p>Perubahan kandungan Firebase akan dipaparkan di sini.</p></div>`;
+    return;
+  }
+  feed.innerHTML = STATE.activity.map(a => `
+    <div style="display:flex;gap:13px;padding:12px 22px;border-bottom:1px solid var(--border-subtle);">
+      <div style="width:34px;height:34px;border-radius:11px;flex:0 0 34px;background:var(--sky-soft);color:var(--sky-primary);display:flex;align-items:center;justify-content:center;font-size:.8rem;">
+        <i class="fa-solid ${esc(a.icon)}"></i></div>
+      <div style="min-width:0;">
+        <div style="font-size:.83rem;font-weight:600;line-height:1.4;">${esc(a.text)}</div>
+        <div style="font-size:.7rem;color:var(--text-subtle);font-weight:700;margin-top:3px;">${esc(a.time)}</div>
+      </div></div>`).join('');
+}
+
+function clearActivity(){
+  STATE.activity = []; saveLocal(LS_KEYS.acts, []);
+  renderActivityFeed();
+  showToast('Log aktiviti dikosongkan.', 'info');
+}
+
+function getFilteredDests(){
+  let list = [...STATE.destinations];
+  if (STATE.search){
+    const q = STATE.search.toLowerCase();
+    list = list.filter(d => (d.name && d.name.toLowerCase().includes(q)) || (d.desc && d.desc.toLowerCase().includes(q)) || (d.category && d.category.toLowerCase().includes(q)));
+  }
+  if (STATE.catFilter !== 'all') list = list.filter(d => d.category === STATE.catFilter);
+  if (STATE.sort === 'name')     list.sort((a,b) => (a.name || '').localeCompare(b.name || ''));
+  if (STATE.sort === 'rating')   list.sort((a,b) => (b.rating || 0) - (a.rating || 0));
+  if (STATE.sort === 'featured') list.sort((a,b) => (b.featured?1:0) - (a.featured?1:0));
+  return list;
+}
+
+function renderDestTable(){
+  const list = getFilteredDests();
+  const totalPages = Math.max(1, Math.ceil(list.length / STATE.perPage));
+  if (STATE.page > totalPages) STATE.page = totalPages;
+  const start = (STATE.page - 1) * STATE.perPage;
+  const pageItems = list.slice(start, start + STATE.perPage);
+  const body = $('dest-table-body');
+
+  if (!pageItems.length){
+    body.innerHTML = `<tr><td colspan="6"><div class="empty-state">
+      <i class="fa-solid fa-map-location-dot"></i><h4>Tiada Destinasi Dijumpai</h4>
+      <p>Cuba ubah carian atau tambah destinasi baharu.</p></div></td></tr>`;
+  } else {
+    body.innerHTML = pageItems.map(d => {
+      const c = catMeta(d.category);
+      const coords = Array.isArray(d.coords) ? d.coords : [4.8569, 100.7497];
+      return `<tr>
+        <td><div class="cell-dest">
+          <img class="cell-thumb" src="${esc(d.image)}" alt="" onerror="this.style.opacity=.25">
+          <div><strong>${esc(d.name)}</strong>
+          <span><i class="fa-solid fa-location-dot"></i> ${coords[0].toFixed(4)}, ${coords[1].toFixed(4)}</span></div>
+        </div></td>
+        <td><span class="badge" style="background:${c.color}1f;color:${c.color};">
+          <i class="fa-solid ${esc(c.icon)}"></i> ${esc(c.label)}</span></td>
+        <td class="star-cell"><i class="fa-solid fa-star"></i> ${Number(d.rating || 0).toFixed(1)}</td>
+        <td style="font-weight:700;font-size:.82rem;">${esc(d.price)}</td>
+        <td><button class="mini-btn star ${d.featured ? 'on' : ''}" onclick="toggleFeatured('${d.id}')">
+          <i class="fa-${d.featured ? 'solid' : 'regular'} fa-star"></i></button></td>
+        <td><div class="row-actions">
+          <button class="mini-btn edit" onclick="openDestModal('${d.id}')"><i class="fa-solid fa-pen"></i></button>
+          <button class="mini-btn del" onclick="askDelete('${d.id}')"><i class="fa-solid fa-trash"></i></button>
+        </div></td></tr>`;
+    }).join('');
+  }
+
+  $('pager-info').textContent = list.length
+    ? `Menunjukkan ${start + 1}–${Math.min(start + STATE.perPage, list.length)} daripada ${list.length} destinasi`
+    : 'Tiada rekod';
+
+  const btns = [];
+  btns.push(`<button class="pg-btn" ${STATE.page === 1 ? 'disabled' : ''} onclick="setPage(${STATE.page - 1})"><i class="fa-solid fa-chevron-left"></i></button>`);
+  for (let i = 1; i <= totalPages; i++){
+    if (totalPages > 7 && i !== 1 && i !== totalPages && Math.abs(i - STATE.page) > 1){
+      if (i === 2 || i === totalPages - 1) btns.push(`<button class="pg-btn" disabled>…</button>`);
+      continue;
+    }
+    btns.push(`<button class="pg-btn ${i === STATE.page ? 'active' : ''}" onclick="setPage(${i})">${i}</button>`);
+  }
+  btns.push(`<button class="pg-btn" ${STATE.page === totalPages ? 'disabled' : ''} onclick="setPage(${STATE.page + 1})"><i class="fa-solid fa-chevron-right"></i></button>`);
+  $('pager-btns').innerHTML = btns.join('');
+  $('nav-count-dest').textContent = STATE.destinations.length;
+}
+
+function setPage(n){ STATE.page = n; renderDestTable(); }
+function destSearch(val){ STATE.search = val.trim(); STATE.page = 1; renderDestTable(); }
+function destFilter(val){ STATE.catFilter = val; STATE.page = 1; renderDestTable(); }
+function destSort(val){ STATE.sort = val; renderDestTable(); }
+
+function globalSearch(val){
+  STATE.search = val.trim(); STATE.page = 1;
+  if (STATE.view !== 'destinations') switchView('destinations');
+  else renderDestTable();
+  const box = $('dest-search'); if (box) box.value = val;
+}
+
+async function toggleFeatured(id){
+  const d = STATE.destinations.find(x => x.id === id);
+  if (!d) return;
+  d.featured = !d.featured;
+  saveLocal(LS_KEYS.dests, STATE.destinations);
+  await syncDestinationToFirebase(d);
+  logActivity(`Status featured <strong>${esc(d.name)}</strong> ditukar kepada ${d.featured ? 'Aktif' : 'Tidak Aktif'}.`, 'fa-star');
+  renderDestTable();
+  showToast(d.featured ? 'Ditambah ke Destinasi Pilihan ⭐' : 'Dikeluarkan dari Destinasi Pilihan', 'info');
+}
+
+function fillCategorySelects(){
+  const opts = STATE.categories.map(c => `<option value="${esc(c.key)}">${esc(c.label)}</option>`).join('');
+  $('f-cat').innerHTML = opts;
+  $('dest-filter').innerHTML = `<option value="all">Semua Kategori</option>` + opts;
+}
+
+function previewImage(url){
+  $('f-img-preview').src = url || 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=900&q=80';
+}
+
+function openDestModal(id){
+  STATE.editingId = id || null;
+  const d = id ? STATE.destinations.find(x => x.id === id) : null;
+  $('dest-modal-title').textContent = d ? 'Edit Destinasi' : 'Tambah Destinasi';
+  $('dest-modal-sub').textContent   = d ? 'Kemaskini maklumat destinasi Firebase' : 'Lengkapkan maklumat destinasi baharu';
+  $('f-name').value   = d ? d.name : '';
+  $('f-cat').value    = d ? d.category : (STATE.categories[0] ? STATE.categories[0].key : 'nature');
+  $('f-rating').value = d ? d.rating : 4.8;
+  $('f-price').value  = d ? d.price : 'Percuma / Free';
+  $('f-hours').value  = d ? d.hours : '7:00 AM - 10:00 PM';
+  $('f-lat').value    = d ? (d.coords ? d.coords[0] : 4.8569) : 4.856900;
+  $('f-lng').value    = d ? (d.coords ? d.coords[1] : 100.7497) : 100.749700;
+  $('f-img').value    = d ? d.image : '';
+  $('f-desc').value   = d ? d.desc : '';
+  $('f-tips').value   = d ? d.tips : '';
+  previewImage(d ? d.image : '');
+  $('f-featured').classList.toggle('on', d ? !!d.featured : true);
+  $('dest-modal').classList.add('open');
+  lockScroll();
+  setTimeout(() => { initPickerMap(Number($('f-lat').value), Number($('f-lng').value)); }, 120);
+}
+
+function closeDestModal(){
+  $('dest-modal').classList.remove('open');
+  if (!$('confirm-modal').classList.contains('open') && !$('sidebar').classList.contains('open')) {
+    unlockScroll();
+  }
+  STATE.editingId = null;
+}
+
+function initPickerMap(lat, lng){
+  if (!STATE.pickerMap){
+    STATE.pickerMap = L.map('picker-map', { zoomControl:true }).setView([lat, lng], 14);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(STATE.pickerMap);
+    STATE.pickerMarker = L.marker([lat, lng], { draggable:true }).addTo(STATE.pickerMap);
+    STATE.pickerMarker.on('dragend', () => {
+      const p = STATE.pickerMarker.getLatLng();
+      $('f-lat').value = p.lat.toFixed(6);
+      $('f-lng').value = p.lng.toFixed(6);
+    });
+    STATE.pickerMap.on('click', e => {
+      STATE.pickerMarker.setLatLng(e.latlng);
+      $('f-lat').value = e.latlng.lat.toFixed(6);
+      $('f-lng').value = e.latlng.lng.toFixed(6);
+    });
+  } else {
+    STATE.pickerMap.setView([lat, lng], 14);
+    STATE.pickerMarker.setLatLng([lat, lng]);
+  }
+  setTimeout(() => STATE.pickerMap.invalidateSize(), 180);
+}
+
+async function submitDestForm(e){
+  e.preventDefault();
+  const payload = {
+    name:     $('f-name').value.trim(),
+    category: $('f-cat').value,
+    rating:   Math.min(5, Math.max(0, parseFloat($('f-rating').value) || 0)),
+    price:    $('f-price').value.trim() || 'Percuma / Free',
+    hours:    $('f-hours').value.trim() || '7:00 AM - 10:00 PM',
+    coords:   [parseFloat($('f-lat').value) || 4.8569, parseFloat($('f-lng').value) || 100.7497],
+    image:    $('f-img').value.trim() || 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=900&q=80',
+    desc:     $('f-desc').value.trim() || 'Tiada penerangan disediakan.',
+    tips:     $('f-tips').value.trim() || 'Tiada tips khusus.',
+    featured: $('f-featured').classList.contains('on')
+  };
+  if (!payload.name){ showToast('Sila masukkan nama destinasi.', 'error'); return; }
+
+  let finalObj = null;
+  if (STATE.editingId){
+    const idx = STATE.destinations.findIndex(d => d.id === STATE.editingId);
+    if (idx > -1){
+      finalObj = { ...STATE.destinations[idx], ...payload };
+      STATE.destinations[idx] = finalObj;
+      logActivity(`Destinasi <strong>${esc(payload.name)}</strong> dikemaskini.`, 'fa-pen-to-square');
+      showToast('Destinasi berjaya dikemaskini!', 'success');
+    }
+  } else {
+    finalObj = { id: uid('dest'), saves: 0, ...payload };
+    STATE.destinations.unshift(finalObj);
+    logActivity(`Destinasi baharu <strong>${esc(payload.name)}</strong> ditambah.`, 'fa-circle-plus');
+    showToast('Destinasi baharu berjaya ditambah!', 'success');
+  }
+  saveLocal(LS_KEYS.dests, STATE.destinations);
+  if (finalObj) await syncDestinationToFirebase(finalObj);
+  closeDestModal();
+  renderDestTable();
+  renderDashboard();
+}
+
+function openConfirm(title, text, action){
+  $('confirm-title').textContent = title;
+  $('confirm-text').textContent = text;
+  STATE.confirmAction = action;
+  $('confirm-modal').classList.add('open');
+  lockScroll();
+}
+function closeConfirm(){
+  $('confirm-modal').classList.remove('open');
+  STATE.confirmAction = null;
+  if (!$('dest-modal').classList.contains('open') && !$('sidebar').classList.contains('open')) {
+    unlockScroll();
+  }
+}
+$('confirm-yes').addEventListener('click', () => {
+  if (typeof STATE.confirmAction === 'function') STATE.confirmAction();
+  closeConfirm();
+});
+
+function askDelete(id){
+  const d = STATE.destinations.find(x => x.id === id);
+  if (!d) return;
+  openConfirm('Padam Destinasi?', `"${d.name}" akan dipadam secara kekal daripada Firebase dan storan aplikasi.`, async () => {
+    STATE.destinations = STATE.destinations.filter(x => x.id !== id);
+    saveLocal(LS_KEYS.dests, STATE.destinations);
+    await removeDestinationFromFirebase(id);
+    logActivity(`Destinasi <strong>${esc(d.name)}</strong> dipadam.`, 'fa-trash');
+    renderDestTable();
+    renderDashboard();
+    showToast('Destinasi berjaya dipadam daripada Firebase.', 'success');
+  });
+}
+
+function renderCategories(){
+  $('cat-table-body').innerHTML = STATE.categories.map(c => {
+    const count = STATE.destinations.filter(d => d.category === c.key).length;
+    return `<tr>
+      <td><span class="badge" style="background:${c.color}1f;color:${c.color};">
+        <i class="fa-solid ${esc(c.icon)}"></i> ${esc(c.label)}</span></td>
+      <td><strong>${count}</strong> destinasi</td>
+      <td><div class="row-actions">
+        <button class="mini-btn del" onclick="askDeleteCategory('${c.key}')"><i class="fa-solid fa-trash"></i></button>
+      </div></td></tr>`;
+  }).join('') || `<tr><td colspan="3" class="empty-state" style="padding:34px;">Tiada kategori</td></tr>`;
+  $('nav-count-cat').textContent = STATE.categories.length;
+}
+
+function addCategory(e){
+  e.preventDefault();
+  const key   = $('cat-key').value.trim().toLowerCase().replace(/\s+/g,'_');
+  const label = $('cat-label').value.trim();
+  const icon  = $('cat-icon').value.trim() || 'fa-tag';
+  const color = $('cat-color').value;
+  if (!key || !label){ showToast('Sila lengkapkan semua ruangan.', 'error'); return; }
+  if (STATE.categories.some(c => c.key === key)){ showToast('Kunci kategori sudah wujud.', 'error'); return; }
+  STATE.categories.push({ key, label, icon, color });
+  saveLocal(LS_KEYS.cats, STATE.categories);
+  $('cat-key').value = ''; $('cat-label').value = ''; $('cat-icon').value = 'fa-tag';
+  fillCategorySelects();
+  renderCategories();
+  renderDashboard();
+  logActivity(`Kategori baharu <strong>${esc(label)}</strong> ditambah.`, 'fa-shapes');
+  showToast('Kategori baharu ditambah!', 'success');
+}
+
+function askDeleteCategory(key){
+  const c = catMeta(key);
+  const count = STATE.destinations.filter(d => d.category === key).length;
+  const warn = count > 0 ? ` Terdapat ${count} destinasi dalam kategori ini.` : '';
+  openConfirm('Padam Kategori?', `Kategori "${c.label}" akan dipadam.${warn}`, () => {
+    STATE.categories = STATE.categories.filter(x => x.key !== key);
+    saveLocal(LS_KEYS.cats, STATE.categories);
+    fillCategorySelects();
+    renderCategories();
+    renderDestTable();
+    renderDashboard();
+    logActivity(`Kategori <strong>${esc(c.label)}</strong> dipadam.`, 'fa-trash');
+    showToast('Kategori dipadam.', 'success');
+  });
+}
+
+function gemFilter(status){ STATE.gemView = status; renderGems(); }
+
+function renderGems(){
+  const list = STATE.gemView === 'all' ? STATE.gems : STATE.gems.filter(g => g.status === STATE.gemView);
+  const wrap = $('gems-list');
+  const pending = STATE.gems.filter(g => g.status === 'pending').length;
+  $('nav-count-gems').textContent = pending;
+  if (!list.length){
+    wrap.innerHTML = `<div class="empty-state"><i class="fa-solid fa-gem"></i>
+      <h4>Tiada Cadangan</h4><p>Belum ada cadangan Hidden Gems dalam kategori ini.</p></div>`;
+    return;
+  }
+  wrap.innerHTML = list.map(g => {
+    const badgeCls = g.status === 'pending' ? 'sp-pending' : g.status === 'approved' ? 'sp-approved' : 'sp-rejected';
+    const badgeTxt = g.status === 'pending' ? 'Menunggu' : g.status === 'approved' ? 'Diluluskan' : 'Ditolak';
+    return `<div class="gem-row">
+      <div class="gem-ico"><i class="fa-solid fa-gem"></i></div>
+      <div class="gem-info">
+        <strong>${esc(g.name)}</strong>
+        <p>${esc(g.reason)}</p>
+        <div class="meta">
+          <span><i class="fa-solid fa-user"></i> ${esc(g.by)}</span>
+          <span><i class="fa-regular fa-clock"></i> ${esc(g.date)}</span>
+          <span class="status-pill ${badgeCls}">${badgeTxt}</span>
+        </div>
+      </div>
+      <div class="gem-actions">
+        ${g.status !== 'approved' ? `<button class="btn btn-mint btn-sm" onclick="setGemStatus('${g.id}','approved')"><i class="fa-solid fa-check"></i> Lulus</button>` : ''}
+        ${g.status !== 'rejected' ? `<button class="btn btn-ghost btn-sm" onclick="setGemStatus('${g.id}','rejected')"><i class="fa-solid fa-xmark"></i> Tolak</button>` : ''}
+      </div></div>`;
+  }).join('');
+}
+
+function setGemStatus(id, status){
+  const g = STATE.gems.find(x => x.id === id);
+  if (!g) return;
+  g.status = status;
+  saveLocal(LS_KEYS.gems, STATE.gems);
+  renderGems();
+  logActivity(`Hidden Gem <strong>${esc(g.name)}</strong> ${status === 'approved' ? 'diluluskan' : 'ditolak'}.`, status === 'approved' ? 'fa-circle-check' : 'fa-circle-xmark');
+  showToast(status === 'approved' ? 'Cadangan diluluskan!' : 'Cadangan ditolak.', status === 'approved' ? 'success' : 'info');
+}
+
+function renderUsers(){
+  const users = STATE.users;
+  const masters = users.filter(u => (u.stamps || 0) >= 5).length;
+  const totalStamps = users.reduce((s,u) => s + (u.stamps || 0), 0);
+  const maxPossible = Math.max(1, users.length * TOTAL_CHECKPOINTS);
+  $('stat-active-users').textContent = users.length;
+  $('stat-masters').textContent = masters;
+  $('stat-completion').textContent = users.length ? Math.round((totalStamps / maxPossible) * 100) + '%' : '0%';
+  const tbody = $('users-table-body');
+  if (!users.length) {
+    tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state" style="padding:40px 20px;">
+      <i class="fa-solid fa-user-shield"></i><h4>Tiada Pengguna Sebenar Dijumpai</h4>
+      <p>Akaun demo telah dialih keluar. Apabila pelawat mendaftar di aplikasi mudah alih / Firebase Authentication, profil mereka akan muncul secara automatik di sini.</p>
+    </div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = users.map(u => {
+    const stamps = Number(u.stamps || 0);
+    const pct = Math.round((stamps / TOTAL_CHECKPOINTS) * 100);
+    const rank = stamps >= 5 ? 'Master Taiping 👑' : stamps >= 2 ? 'Pengembara Setia 🌿' : 'Novis Alam 🎒';
+    const initials = esc(u.name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase());
+    return `<tr>
+      <td><div class="cell-dest">
+        <div class="admin-avatar" style="border-radius:13px;">${initials || 'AZ'}</div>
+        <div><strong>${esc(u.name)}</strong><span>${esc(u.email)}</span></div>
+      </div></td>
+      <td><strong>${stamps}</strong> / ${TOTAL_CHECKPOINTS}</td>
+      <td style="min-width:150px;"><div style="display:flex;align-items:center;gap:10px;">
+        <div class="prog-track" style="flex:1;"><div class="prog-fill" style="width:${pct}%;"></div></div>
+        <span style="font-size:.75rem;font-weight:800;color:var(--text-muted);">${pct}%</span>
+      </div></td>
+      <td style="font-size:.82rem;font-weight:700;">${rank}</td>
+      <td style="font-size:.8rem;color:var(--text-muted);">${esc(u.last || 'Aktif')}</td>
+    </tr>`;
+  }).join('');
+}
+
+function exportData(){
+  const blob = new Blob([JSON.stringify(STATE.destinations, null, 2)], { type:'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'taiping-destinations-firebase-' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Fail JSON berjaya dimuat turun.', 'success');
+}
+
+function importData(e){
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async evt => {
+    try{
+      const data = JSON.parse(evt.target.result);
+      if (!Array.isArray(data)) throw new Error('Format tidak sah');
+      STATE.destinations = data.map(d => ({
+        id: d.id || uid('dest'), name: d.name || 'Tanpa Nama', category: d.category || 'nature',
+        featured: !!d.featured, image: d.image || '', rating: Number(d.rating) || 0,
+        price: d.price || 'Percuma / Free', coords: Array.isArray(d.coords) ? d.coords : [4.8569, 100.7497],
+        saves: d.saves || 0, hours: d.hours || '7:00 AM - 10:00 PM', desc: d.desc || '', tips: d.tips || ''
+      }));
+      saveLocal(LS_KEYS.dests, STATE.destinations);
+      await pushAllToFirebase();
+      renderDestTable();
+      renderDashboard();
+      showToast('Data berjaya diimport dan dihantar ke Firebase!', 'success');
+    }catch(err){ showToast('Fail tidak sah. Sila semak format JSON.', 'error'); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+/* =========================================================
+   FIREBASE AUTHENTICATION (SEBENAR)
+   ========================================================= */
+function getAuthErrorMessage(code){
+  const map = {
+    'auth/invalid-email':        'Format emel tidak sah.',
+    'auth/user-disabled':        'Akaun ini telah dilumpuhkan oleh pentadbir.',
+    'auth/user-not-found':       'Akaun tidak dijumpai. Sila semak emel anda.',
+    'auth/wrong-password':       'Kata laluan tidak tepat. Sila cuba lagi.',
+    'auth/invalid-credential':   'Emel atau kata laluan tidak sah.',
+    'auth/invalid-login-credentials':'Emel atau kata laluan tidak sah.',
+    'auth/too-many-requests':    'Terlalu banyak percubaan gagal. Sila cuba sebentar lagi.',
+    'auth/network-request-failed':'Ralat rangkaian. Semak sambungan internet anda.',
+    'auth/missing-password':     'Sila masukkan kata laluan.',
+    'auth/operation-not-allowed':'Log masuk emel/kata laluan tidak diaktifkan dalam Firebase Console.'
+  };
+  return map[code] || 'Ralat pengesahan. Kod: ' + (code || 'tidak diketahui');
+}
+
+function showLoginError(msg){
+  const box = $('login-error');
+  const txt = $('login-error-text');
+  if (!box || !txt) return;
+  txt.textContent = msg;
+  box.classList.add('show');
+  clearTimeout(box._timer);
+  box._timer = setTimeout(() => box.classList.remove('show'), 6000);
+}
+function hideLoginError(){
+  const box = $('login-error');
+  if (box) box.classList.remove('show');
+}
+
+function updateAdminDisplay(user){
+  const nameEl = $('admin-display-name');
+  const avatar = $('admin-avatar-initials');
+  if (!nameEl) return;
+  const display = user && (user.displayName || user.email) || 'Pentadbir Taiping';
+  nameEl.textContent = display;
+  if (avatar){
+    const initials = (display || 'AD')
+      .replace(/@.*/, '')
+      .split(/[\s._-]+/)
+      .map(n => n[0]).filter(Boolean).join('').slice(0,2).toUpperCase();
+    avatar.textContent = initials || 'AD';
+  }
+}
+
+function togglePassword(btn){
+  const inp = $('login-pass');
+  const icon = btn.querySelector('i');
+  if (inp.type === 'password'){ inp.type = 'text'; icon.className = 'fa-regular fa-eye-slash'; }
+  else { inp.type = 'password'; icon.className = 'fa-regular fa-eye'; }
+}
+
+async function performLogin(e){
+  e.preventDefault();
+  hideLoginError();
+
+  const email = $('login-user').value.trim();
+  const password = $('login-pass').value;
+  const remember = $('login-remember').checked;
+  const btn = $('login-btn');
+  const card = $('login-card');
+
+  if (!email || !password){
+    showLoginError('Sila isi emel dan kata laluan.');
+    return;
+  }
+
+  btn.classList.add('loading');
+  btn.disabled = true;
+
+  try {
+    await setPersistence(auth, remember ? browserLocalPersistence : browserSessionPersistence);
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+
+    btn.classList.remove('loading');
+    btn.classList.add('success');
+    btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Berjaya!';
+
+    logActivity(`Pentadbir <strong>${esc(userCredential.user.email)}</strong> log masuk ke sistem.`, 'fa-right-to-bracket');
+
+    setTimeout(() => {
+      setTimeout(() => showToast('Selamat kembali! 👋', 'success'), 400);
+      setTimeout(() => {
+        btn.classList.remove('success');
+        btn.innerHTML = '<span>Log Masuk</span><i class="fa-solid fa-arrow-right"></i>';
+        btn.disabled = false;
+      }, 500);
+    }, 600);
+  } catch (error) {
+    console.warn('Firebase Auth error:', error.code, error.message);
+
+    card.classList.add('shake');
+    setTimeout(() => card.classList.remove('shake'), 520);
+
+    showLoginError(getAuthErrorMessage(error.code));
+    btn.classList.remove('loading');
+    btn.disabled = false;
+    $('login-pass').value = '';
+    $('login-pass').focus();
+  }
+}
+
+async function logout(){
+  openConfirm(
+    'Log Keluar Sistem?',
+    'Sesi pentadbir akan ditamatkan. Anda perlu log masuk semula untuk mengakses papan pemuka.',
+    async () => {
+      try {
+        await signOut(auth);
+        logActivity('Pentadbir telah log keluar dari sistem.', 'fa-right-from-bracket');
+        showToast('Anda telah log keluar.', 'info');
+      } catch (e) {
+        console.warn('Logout error:', e);
+        showToast('Ralat log keluar: ' + e.message, 'error');
+      }
+    }
+  );
+}
+
+// Listener utama — pantau status log masuk & kawal paparan
+function initAuth(){
+  onAuthStateChanged(auth, (user) => {
+    STATE.authReady = true;
+    const login = $('login-screen');
+
+    if (user){
+      STATE.currentUser = user;
+      updateAdminDisplay(user);
+      login.classList.add('hidden');
+      /* Buka semula scroll badan bila login screen hilang */
+      if (!$('dest-modal').classList.contains('open') &&
+          !$('confirm-modal').classList.contains('open') &&
+          !$('sidebar').classList.contains('open')) {
+        unlockScroll();
+      }
+      if (!STATE._dataLoaded){
+        STATE._dataLoaded = true;
+        listenToFirebaseDestinations();
+        syncFirebaseUsers();
+        setTimeout(() => showToast('Firebase Realtime Database disambungkan! 🚀', 'info'), 500);
+      }
+    } else {
+      STATE.currentUser = null;
+      login.classList.remove('hidden');
+      lockScroll();                      /* kunci scroll badan semasa login */
+      $('login-user').value = '';
+      $('login-pass').value = '';
+      $('login-pass').type = 'password';
+      const tp = document.querySelector('.toggle-pass i');
+      if (tp) tp.className = 'fa-regular fa-eye';
+      hideLoginError();
+      setTimeout(() => { const el = $('login-user'); if (el) el.focus(); }, 400);
+    }
+  });
+}
+
+/* =========================================================
+   GLOBAL EXPOSURE
+   ========================================================= */
+window.toggleSidebar = toggleSidebar;
+window.switchView = switchView;
+window.toggleTheme = toggleTheme;
+window.toggleSwitch = toggleSwitch;
+window.clearActivity = clearActivity;
+window.destSearch = destSearch;
+window.destFilter = destFilter;
+window.destSort = destSort;
+window.globalSearch = globalSearch;
+window.openDestModal = openDestModal;
+window.closeDestModal = closeDestModal;
+window.submitDestForm = submitDestForm;
+window.previewImage = previewImage;
+window.toggleFeatured = toggleFeatured;
+window.askDelete = askDelete;
+window.askDeleteCategory = askDeleteCategory;
+window.addCategory = addCategory;
+window.gemFilter = gemFilter;
+window.setGemStatus = setGemStatus;
+window.syncFirebaseUsers = syncFirebaseUsers;
+window.pushAllToFirebase = pushAllToFirebase;
+window.exportData = exportData;
+window.importData = importData;
+window.closeConfirm = closeConfirm;
+window.setPage = setPage;
+window.showToast = showToast;
+window.performLogin = performLogin;
+window.togglePassword = togglePassword;
+window.logout = logout;
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape'){
+    if ($('dest-modal').classList.contains('open')) closeDestModal();
+    if ($('confirm-modal').classList.contains('open')) closeConfirm();
+    toggleSidebar(false);
+  }
+});
+
+document.querySelectorAll('.overlay').forEach(ov => {
+  ov.addEventListener('click', e => {
+    if (e.target === ov){
+      if (ov.id === 'dest-modal') closeDestModal();
+      if (ov.id === 'confirm-modal') closeConfirm();
+    }
+  });
+});
+
+/* =========================================================
+   INIT
+   ========================================================= */
+function init(){
+  // Tema
+  const savedTheme = loadLocal(LS_KEYS.theme, 'light');
+  STATE.theme = savedTheme;
+  document.body.setAttribute('data-theme', savedTheme);
+  const themeIcon = $('theme-btn');
+  if (themeIcon) {
+    themeIcon.querySelector('i').className = savedTheme === 'dark' ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+  }
+
+  // Muat data dari storage tempatan
+  STATE.categories   = loadLocal(LS_KEYS.cats,  null) || JSON.parse(JSON.stringify(SEED_CATEGORIES));
+  STATE.destinations = loadLocal(LS_KEYS.dests, null) || JSON.parse(JSON.stringify(SEED_DESTINATIONS));
+  STATE.gems         = loadLocal(LS_KEYS.gems,  null) || JSON.parse(JSON.stringify(SEED_GEMS));
+  STATE.users        = [];
+  STATE.activity     = loadLocal(LS_KEYS.acts,  []);
+
+  saveLocal(LS_KEYS.cats, STATE.categories);
+  saveLocal(LS_KEYS.dests, STATE.destinations);
+  saveLocal(LS_KEYS.gems, STATE.gems);
+
+  fillCategorySelects();
+  renderDashboard();
+  renderDestTable();
+  renderGems();
+  renderUsers();
+
+  // Mulakan Firebase Auth listener
+  initAuth();
+
+  // Kawal semula scroll lock bila saiz skrin berubah
+  window.addEventListener('resize', () => {
+    if (window.innerWidth > 1024 && _scrollLocked && !$('dest-modal').classList.contains('open')
+        && !$('confirm-modal').classList.contains('open')) {
+      unlockScroll();
+    }
+  });
+}
+
+window.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
