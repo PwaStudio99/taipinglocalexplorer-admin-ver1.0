@@ -80,9 +80,8 @@
     overflow-x:hidden;
     min-height:100vh;
     min-height:100dvh;
-    overscroll-behavior-y:none; /* halang pull-to-refresh & bounce berlebihan */
+    overscroll-behavior-y:none;
   }
-  /* Kunci scroll badan (iOS-safe) */
   body.no-scroll{
     position:fixed;
     left:0;right:0;
@@ -115,7 +114,7 @@
     top:0;
     height:100vh;
     height:100dvh;
-    padding-top:var(--safe-top);              /* lindungi dari notch */
+    padding-top:var(--safe-top);
     padding-left:var(--safe-left);
     z-index:900;
     transition:var(--spring);
@@ -138,10 +137,10 @@
 
   .nav-scroll{
     flex:1 1 auto;
-    min-height:0;                              /* penting untuk flex scroll */
+    min-height:0;
     overflow-y:auto;
-    -webkit-overflow-scrolling:touch;          /* momentum scroll iOS */
-    overscroll-behavior:contain;               /* elak scroll chaining */
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior:contain;
     padding:16px 12px;
   }
   .nav-label{
@@ -174,7 +173,7 @@
 
   .sidebar-foot{
     padding:14px;
-    padding-bottom:calc(14px + var(--safe-bottom)); /* lindungi home indicator */
+    padding-bottom:calc(14px + var(--safe-bottom));
     border-top:1px solid var(--border-subtle);
     flex:0 0 auto;
   }
@@ -215,7 +214,7 @@
     backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
     border-bottom:1px solid var(--border-subtle);
     padding:14px 24px;
-    padding-top:calc(14px + var(--safe-top));       /* lindungi notch */
+    padding-top:calc(14px + var(--safe-top));
     padding-left:calc(24px + var(--safe-left));
     padding-right:calc(24px + var(--safe-right));
     display:flex;align-items:center;gap:14px;
@@ -272,7 +271,7 @@
     padding:24px;
     padding-left:calc(24px + var(--safe-left));
     padding-right:calc(24px + var(--safe-right));
-    padding-bottom:calc(28px + var(--safe-bottom));  /* ruang bawah untuk home indicator */
+    padding-bottom:calc(28px + var(--safe-bottom));
     flex:1;
     max-width:1400px;
     width:100%;
@@ -377,7 +376,7 @@
   .table-wrap{
     overflow-x:auto;
     -webkit-overflow-scrolling:touch;
-    overscroll-behavior-x:contain;          /* elak laman bergeser ketika swipe */
+    overscroll-behavior-x:contain;
   }
   table{width:100%;border-collapse:collapse;min-width:760px;}
   thead th{
@@ -515,7 +514,7 @@
     background:var(--surface-card);border:1px solid var(--border-subtle);
     border-radius:var(--radius-xl);width:100%;max-width:760px;
     max-height:92vh;
-    max-height:92dvh;                       /* tinggi dinamik — elak UI browser tersembunyi */
+    max-height:92dvh;
     display:flex;flex-direction:column;box-shadow:var(--shadow-deep);
     animation:popIn .36s cubic-bezier(.16,1,.3,1);overflow:hidden;
   }
@@ -534,7 +533,7 @@
     -webkit-overflow-scrolling:touch;
     overscroll-behavior:contain;
     flex:1 1 auto;
-    min-height:0;                            /* penting untuk flex scroll */
+    min-height:0;
   }
   .modal-foot{
     padding:16px 24px;border-top:1px solid var(--border-subtle);
@@ -618,7 +617,7 @@
 
   .toast{
     position:fixed;
-    top:calc(22px + var(--safe-top));       /* elak notch */
+    top:calc(22px + var(--safe-top));
     left:50%;transform:translateX(-50%) translateY(-70px);
     background:var(--text-main);color:#fff;padding:13px 24px;border-radius:40px;
     font-size:.85rem;font-weight:700;box-shadow:var(--shadow-deep);z-index:6000;
@@ -636,7 +635,7 @@
     opacity:0;pointer-events:none;transition:opacity .3s ease;display:none;
   }
 
-  /* ================= LOGIN SCREEN (GLASSMORPHISM) ================= */
+  /* ================= LOGIN SCREEN ================= */
   .login-screen{
     position:fixed;inset:0;z-index:10000;
     display:flex;align-items:center;justify-content:center;
@@ -646,7 +645,7 @@
     padding-left:calc(20px + var(--safe-left));
     padding-right:calc(20px + var(--safe-right));
     background:linear-gradient(135deg,#082f49 0%,#0369a1 45%,#0ea5e9 100%);
-    overflow-y:auto;                        /* boleh scroll bila skrin rendah */
+    overflow-y:auto;
     -webkit-overflow-scrolling:touch;
     overscroll-behavior:contain;
     opacity:1;visibility:visible;
@@ -673,7 +672,7 @@
   .login-card{
     position:relative;z-index:2;
     width:100%;max-width:420px;
-    margin:auto;                            /* center + kekal scroll-safe */
+    margin:auto;
     flex-shrink:0;
     padding:42px 36px 34px;
     border-radius:30px;
@@ -868,7 +867,7 @@
   @media (max-width:640px){
     .page-title p{display:none;}
     .page-title h2{font-size:1.05rem;}
-    .fb-indicator span:not(.dot){display:none;}   /* jimat ruang */
+    .fb-indicator span:not(.dot){display:none;}
     .fb-indicator{padding:8px;}
     .stat-value{font-size:1.6rem;}
     .gem-row{flex-direction:column;}
@@ -1381,7 +1380,7 @@
               <div class="setting-row">
                 <div>
                   <strong>Muat Naik Data Asal ke Firebase</strong>
-                  <p>Segerakkan 8 destinasi awal ke nod `destinations/` di Firebase anda.</p>
+                  <p>Segerakkan semua destinasi ke nod `destinations/` di Firebase anda.</p>
                 </div>
                 <button class="btn btn-sky btn-sm" onclick="pushAllToFirebase()"><i class="fa-solid fa-cloud-arrow-up"></i> Sinkron Firebase</button>
               </div>
@@ -1537,7 +1536,7 @@
 
 <script type="module">
 /* =========================================================
-   FIREBASE MODULAR SDK — APP, ANALYTICS, RTDB, AUTH
+   FIREBASE MODULAR SDK
    ========================================================= */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics.js";
@@ -1578,7 +1577,7 @@ function updateFirebaseIndicator(connected) {
 }
 
 /* =========================================================
-   SCROLL LOCK (iOS-safe) — ganti body.style.overflow
+   SCROLL LOCK (iOS-safe)
    ========================================================= */
 let _scrollLockY = 0;
 let _scrollLocked = false;
@@ -1728,40 +1727,89 @@ function logActivity(text, icon='fa-pen-to-square'){
 }
 
 /* =========================================================
-   FIREBASE RTDB OPERATIONS
+   FIREBASE RTDB OPERATIONS — DIPERBAIKI
+   ---------------------------------------------------------
+   PUNCA BUG LAMA:
+   - Data disimpan sebagai ARRAY di Firebase ({0:{},1:{}}), tapi
+     pemadaman menggunakan `remove(destinations/<id>)` yang TIDAK
+     padan kerana kunci sebenar adalah 0,1,2... Bukan id.
+   - Listener `onValue` membaca seluruh nod, jadi item yang
+     "tertinggal" akan muncul semula bila ada tulisan baru.
+
+   PENYELESAIAN:
+   1. Simpan sebagai OBJEK berkunci id (Firebase-friendly).
+   2. Setiap perubahan (add/edit/delete) → tulis SELURUH nod.
+   3. Flag `_fbWriting` halang listener "echo" dari tulisan sendiri.
+   4. Dedup ikut `id` supaya data lama (kunci nombor) diabaikan.
    ========================================================= */
-async function pushAllToFirebase(){
+let _fbWriting = false;
+
+function destinationsToObject() {
+  const payload = {};
+  STATE.destinations.forEach(d => { if (d && d.id) payload[d.id] = d; });
+  return payload;
+}
+
+async function writeDestinationsToFirebase(silent = true) {
+  _fbWriting = true;
   try {
-    updateFirebaseIndicator(false);
-    await set(ref(db, 'destinations'), STATE.destinations);
-    logActivity('Semua data destinasi disegerakkan ke Firebase Realtime Database.', 'fa-cloud-arrow-up');
-    showToast('Data destinasi berjaya disegerakkan ke Firebase! ☁️', 'success');
+    // `set()` pada nod induk akan MENGGANTIKAN seluruh nod destinations
+    // dengan objek id-keyed kita — jadi item yang dipadam betul-betul hilang.
+    await set(ref(db, 'destinations'), destinationsToObject());
+    if (!silent) {
+      logActivity('Semua data destinasi disegerakkan ke Firebase.', 'fa-cloud-arrow-up');
+      showToast('Data destinasi berjaya disegerakkan ke Firebase! ☁️', 'success');
+    }
   } catch (err) {
-    console.error('Firebase save error:', err);
-    showToast('Ralat menyegerakkan ke Firebase: ' + err.message, 'error');
-  } finally { updateFirebaseIndicator(true); }
+    console.error('Firebase write error:', err);
+    if (!silent) showToast('Ralat menyegerakkan ke Firebase: ' + err.message, 'error');
+  } finally {
+    setTimeout(() => { _fbWriting = false; }, 600);
+  }
 }
-async function syncDestinationToFirebase(destItem) {
-  try { await set(ref(db, `destinations/${destItem.id}`), destItem); }
-  catch(e) { console.warn("Gagal simpan ke nod realtime:", e); }
+
+async function pushAllToFirebase() {
+  updateFirebaseIndicator(false);
+  await writeDestinationsToFirebase(false);
+  updateFirebaseIndicator(true);
 }
-async function removeDestinationFromFirebase(destId) {
-  try { await remove(ref(db, `destinations/${destId}`)); }
-  catch(e) { console.warn("Gagal buang dari nod realtime:", e); }
-}
+
+// Wrapper (nama lama dikekalkan supaya panggilan sedia ada tidak pecah)
+async function syncDestinationToFirebase()  { await writeDestinationsToFirebase(true); }
+async function removeDestinationFromFirebase() { await writeDestinationsToFirebase(true); }
+
 function listenToFirebaseDestinations() {
   onValue(ref(db, 'destinations'), (snapshot) => {
     updateFirebaseIndicator(true);
+
+    // Abaikan echo daripada tulisan kita sendiri
+    if (_fbWriting) return;
+
     const data = snapshot.val();
-    if (data) {
-      if (Array.isArray(data)) STATE.destinations = data.filter(Boolean);
-      else if (typeof data === 'object') STATE.destinations = Object.values(data);
-      saveLocal(LS_KEYS.dests, STATE.destinations);
-      renderDestTable();
-      renderDashboard();
-    }
-  }, (error) => { console.warn("Firebase listener warning:", error); updateFirebaseIndicator(false); });
+    if (!data || typeof data !== 'object') return;
+
+    // Baca objek → senarai, dedupe ikut id (utamakan kunci id, bukan indeks nombor)
+    const map = new Map();
+    Object.entries(data).forEach(([key, val]) => {
+      if (!val || typeof val !== 'object') return;
+      const id = val.id || key;
+      const isIdKey = !/^\d+$/.test(key);
+      const prev = map.get(id);
+      if (!prev || (isIdKey && !prev._isIdKey)) {
+        map.set(id, { ...val, id, _isIdKey: isIdKey });
+      }
+    });
+
+    STATE.destinations = [...map.values()].map(({ _isIdKey, ...rest }) => rest);
+    saveLocal(LS_KEYS.dests, STATE.destinations);
+    renderDestTable();
+    renderDashboard();
+  }, (error) => {
+    console.warn('Firebase listener warning:', error);
+    updateFirebaseIndicator(false);
+  });
 }
+
 function syncFirebaseUsers() {
   updateFirebaseIndicator(false);
   get(ref(db, 'users')).then((snapshot) => {
@@ -1797,7 +1845,6 @@ function toggleSidebar(force){
   sb.classList.toggle('open', open);
   sc.classList.toggle('show', open);
 
-  /* Kunci scroll badan hanya pada mod mobile drawer */
   if (window.innerWidth <= 1024) {
     if (open) lockScroll();
     else if (!$('dest-modal').classList.contains('open')) unlockScroll();
@@ -2005,7 +2052,7 @@ async function toggleFeatured(id){
   if (!d) return;
   d.featured = !d.featured;
   saveLocal(LS_KEYS.dests, STATE.destinations);
-  await syncDestinationToFirebase(d);
+  await writeDestinationsToFirebase(true);
   logActivity(`Status featured <strong>${esc(d.name)}</strong> ditukar kepada ${d.featured ? 'Aktif' : 'Tidak Aktif'}.`, 'fa-star');
   renderDestTable();
   showToast(d.featured ? 'Ditambah ke Destinasi Pilihan ⭐' : 'Dikeluarkan dari Destinasi Pilihan', 'info');
@@ -2089,23 +2136,23 @@ async function submitDestForm(e){
   };
   if (!payload.name){ showToast('Sila masukkan nama destinasi.', 'error'); return; }
 
-  let finalObj = null;
   if (STATE.editingId){
     const idx = STATE.destinations.findIndex(d => d.id === STATE.editingId);
     if (idx > -1){
-      finalObj = { ...STATE.destinations[idx], ...payload };
-      STATE.destinations[idx] = finalObj;
+      STATE.destinations[idx] = { ...STATE.destinations[idx], ...payload };
       logActivity(`Destinasi <strong>${esc(payload.name)}</strong> dikemaskini.`, 'fa-pen-to-square');
       showToast('Destinasi berjaya dikemaskini!', 'success');
     }
   } else {
-    finalObj = { id: uid('dest'), saves: 0, ...payload };
-    STATE.destinations.unshift(finalObj);
+    STATE.destinations.unshift({ id: uid('dest'), saves: 0, ...payload });
     logActivity(`Destinasi baharu <strong>${esc(payload.name)}</strong> ditambah.`, 'fa-circle-plus');
     showToast('Destinasi baharu berjaya ditambah!', 'success');
   }
+
   saveLocal(LS_KEYS.dests, STATE.destinations);
-  if (finalObj) await syncDestinationToFirebase(finalObj);
+  // Tulis SELURUH nod → item yang dipadam kekal padam, bukan muncul balik
+  await writeDestinationsToFirebase(true);
+
   closeDestModal();
   renderDestTable();
   renderDashboard();
@@ -2136,7 +2183,8 @@ function askDelete(id){
   openConfirm('Padam Destinasi?', `"${d.name}" akan dipadam secara kekal daripada Firebase dan storan aplikasi.`, async () => {
     STATE.destinations = STATE.destinations.filter(x => x.id !== id);
     saveLocal(LS_KEYS.dests, STATE.destinations);
-    await removeDestinationFromFirebase(id);
+    // Tulis SELURUH nod tanpa item ini → kekal padam di Firebase
+    await writeDestinationsToFirebase(true);
     logActivity(`Destinasi <strong>${esc(d.name)}</strong> dipadam.`, 'fa-trash');
     renderDestTable();
     renderDashboard();
@@ -2440,7 +2488,6 @@ function initAuth(){
       STATE.currentUser = user;
       updateAdminDisplay(user);
       login.classList.add('hidden');
-      /* Buka semula scroll badan bila login screen hilang */
       if (!$('dest-modal').classList.contains('open') &&
           !$('confirm-modal').classList.contains('open') &&
           !$('sidebar').classList.contains('open')) {
@@ -2448,14 +2495,22 @@ function initAuth(){
       }
       if (!STATE._dataLoaded){
         STATE._dataLoaded = true;
-        listenToFirebaseDestinations();
+
+        // BERSIHKAN data lama → TULIS keadaan setempat ke Firebase dahulu
+        // (ini SEKALIGUS membersihkan format array lama {0:{},1:{}}),
+        // baru mula mendengar perubahan real-time.
+        (async () => {
+          await writeDestinationsToFirebase(true);
+          listenToFirebaseDestinations();
+        })();
+
         syncFirebaseUsers();
         setTimeout(() => showToast('Firebase Realtime Database disambungkan! 🚀', 'info'), 500);
       }
     } else {
       STATE.currentUser = null;
       login.classList.remove('hidden');
-      lockScroll();                      /* kunci scroll badan semasa login */
+      lockScroll();
       $('login-user').value = '';
       $('login-pass').value = '';
       $('login-pass').type = 'password';
@@ -2521,7 +2576,6 @@ document.querySelectorAll('.overlay').forEach(ov => {
    INIT
    ========================================================= */
 function init(){
-  // Tema
   const savedTheme = loadLocal(LS_KEYS.theme, 'light');
   STATE.theme = savedTheme;
   document.body.setAttribute('data-theme', savedTheme);
@@ -2530,7 +2584,6 @@ function init(){
     themeIcon.querySelector('i').className = savedTheme === 'dark' ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
   }
 
-  // Muat data dari storage tempatan
   STATE.categories   = loadLocal(LS_KEYS.cats,  null) || JSON.parse(JSON.stringify(SEED_CATEGORIES));
   STATE.destinations = loadLocal(LS_KEYS.dests, null) || JSON.parse(JSON.stringify(SEED_DESTINATIONS));
   STATE.gems         = loadLocal(LS_KEYS.gems,  null) || JSON.parse(JSON.stringify(SEED_GEMS));
@@ -2547,10 +2600,8 @@ function init(){
   renderGems();
   renderUsers();
 
-  // Mulakan Firebase Auth listener
   initAuth();
 
-  // Kawal semula scroll lock bila saiz skrin berubah
   window.addEventListener('resize', () => {
     if (window.innerWidth > 1024 && _scrollLocked && !$('dest-modal').classList.contains('open')
         && !$('confirm-modal').classList.contains('open')) {
